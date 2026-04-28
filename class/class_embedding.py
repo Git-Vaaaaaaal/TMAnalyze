@@ -335,7 +335,6 @@ class Processor:
         patch_size: int, 
         overlap: int = 0, 
         saveto: str | None = None, 
-        visualize: bool = True,
         min_tissue_proportion: float = 0.,
     ) -> str:
         if saveto is None:
