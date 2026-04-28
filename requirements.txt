@@ -1,0 +1,16 @@
+torchmil
+torch
+pandas
+numpy 
+geopandas
+torchvision
+pillow
+ipython
+huggingface_hub
+openslide-python
+matplotlib
+tqdm
+torchmetrics
+timm
+scipy
+scikit-learn
