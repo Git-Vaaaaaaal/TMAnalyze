@@ -4,6 +4,7 @@ import segmentation_models_pytorch
 from trident.patch_encoder_models import encoder_registry as patch_encoder_registry
 from trident.slide_encoder_models import encoder_registry as slide_encoder_registry
 from trident.patch_encoder_models.load import encoder_factory
+import pandas as pd
 
 def running_patch_embedding(processor, model_name, magnification, patch_size):
     gpu = 0 # == cuda

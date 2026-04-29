@@ -168,15 +168,7 @@ class Processor:
             )
             self.wsis.append(slide)
 
-    def run_segmentation_job(
-        self, 
-        segmentation_model: torch.nn.Module, 
-        seg_mag: int = 10, 
-        holes_are_tissue: bool = False,
-        batch_size: int = 16,
-        artifact_remover_model: torch.nn.Module = None,
-        device: str = 'cuda:0', 
-    ) -> str:
+    def run_segmentation_job(self) -> str:
         """
         The `run_segmentation_job` function performs tissue segmentation on all slides managed by the processor. 
         It uses a machine learning model to identify tissue regions and saves the resulting segmentations to the 
@@ -248,7 +240,7 @@ class Processor:
                     })
 
             # Enregistrement
-            filename = getattr(wsi, 'name', f"wsi_{id(wsi)}") + ".geojson"
+            filename = os.path.join(saveto, getattr(wsi, 'name', f"wsi_{id(wsi)}") + ".geojson")
             with open(filename, 'w') as f:
                 json.dump({
                     "type": "FeatureCollection",

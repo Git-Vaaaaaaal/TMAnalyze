@@ -1,11 +1,12 @@
 from src.embedding import running_patch_embedding
 from src.embedding import running_slide_embedding
 from src.class_embedding import Processor
+import torch
 
 #Partie 1 : Embeddings
 job_dir = r"MUM1/job_dir"
 wsi_source = r"MUM1/wsi_source"
-wsi_ext = ".tiff"
+wsi_ext = [".tiff"]
 wsi_cache = "cache/"
 skip_errors = True
 custom_mpp_keys = {}
@@ -16,6 +17,10 @@ search_nested = False
 
 magnification = 20.0
 patch_size = 64
+
+GPU = 0
+device = f'cuda:{GPU}' if torch.cuda.is_available() else 'cpu'
+print(f"Using device: {device}")
 
 embedding = Processor(
         job_dir=job_dir,
