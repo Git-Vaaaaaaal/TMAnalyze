@@ -14,3 +14,4 @@ torchmetrics
 timm
 scipy
 scikit-learn
+tmax
