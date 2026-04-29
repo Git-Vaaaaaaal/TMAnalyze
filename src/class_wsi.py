@@ -107,6 +107,8 @@ class WSI:
         self.mag = None  # Placeholder magnification
         self.lazy_init = lazy_init  # Initialize immediately if lazy_init is False
         self.max_workers = max_workers
+        #adding the gdf files
+        self.gdf_contours = gpd.read_file(self.tissue_seg_path)
 
         if not self.lazy_init:
             self._lazy_initialize()

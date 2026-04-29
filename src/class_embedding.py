@@ -18,6 +18,22 @@ from trident.Maintenance import deprecated
 from trident.wsi_objects.WSIFactory import OPENSLIDE_EXTENSIONS, PIL_EXTENSIONS, SDPC_EXTENSIONS
 
 
+import os
+import time
+import logging
+import traceback
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+from tqdm import tqdm
+from inspect import signature
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 class Processor:
 
     def __init__(
@@ -126,7 +142,7 @@ class Processor:
         full_paths, rel_paths = collect_valid_slides(
             wsi_dir=wsi_source,
             custom_list_path=custom_list_of_wsis,
-            wsi_ext=self.wsi_ext,
+            wsi_ext=wsi_ext,
             search_nested=search_nested,
             max_workers=max_workers,
             return_relative_paths=True
@@ -213,7 +229,7 @@ class Processor:
         os.makedirs(saveto, exist_ok=True)
         for wsi in self.wsis:
             wsi_mask = TMAx.predict_mask(wsi)
-            binary = np.where(wsi_mask == 0, 255, 0).astype(np.uint8)
+            binary = np.where(wsi_mask > 0, 255, 0).astype(np.uint8)
             contours, hierarchy = cv2.findContours(binary, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
             
             features = []
@@ -247,77 +263,8 @@ class Processor:
                     "name": filename,
                     "features": features
                 }, f)
-            
-        """ sig = signature(self.run_segmentation_job)
-        local_attrs = {k: v for k, v in locals().items() if k in sig.parameters}
-        self.save_config(
-            saveto=os.path.join(self.job_dir, '_config_segmentation.json'),
-            local_attrs=local_attrs,
-            ignore = ['segmentation_model', 'loop', 'valid_slides', 'wsis']
-        )
+            wsi.tissue_seg_path = filename
 
-        self.loop = tqdm(self.wsis, desc='Segmenting tissue', total = len(self.wsis))
-        for wsi in self.loop:   
-            # Check if contour already exists
-            if os.path.exists(os.path.join(saveto, f'{wsi.name}.geojson')) and not is_locked(os.path.join(saveto, f'{wsi.name}.geojson')):
-                self.loop.set_postfix_str(f'{wsi.name} already segmented. Skipping...')
-                update_log(os.path.join(self.job_dir, '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', 'Tissue segmented.')
-                continue
-
-            # Check if another process has claimed this slide
-            if is_locked(os.path.join(saveto, f'{wsi.name}.jpg')):
-                self.loop.set_postfix_str(f'{wsi.name} is locked. Skipping...')
-                continue
-
-            try:
-                self.loop.set_postfix_str(f'Segmenting {wsi}')
-                create_lock(os.path.join(saveto, f'{wsi.name}.jpg'))
-                update_log(os.path.join(self.job_dir, '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', 'LOCKED. Segmenting tissue...')
-
-                # call a function from WSI object to do the work
-                gdf_saveto = wsi.segment_tissue(
-                    segmentation_model=segmentation_model,
-                    target_mag=seg_mag,
-                    holes_are_tissue=holes_are_tissue,
-                    job_dir=self.job_dir,
-                    batch_size=batch_size,
-                    device=device
-                )
-
-                # additionally remove artifacts for better segmentation.
-                if artifact_remover_model is not None:
-                    gdf_saveto = wsi.segment_tissue(
-                        segmentation_model=artifact_remover_model,
-                        target_mag=artifact_remover_model.target_mag,
-                        holes_are_tissue=False,
-                        job_dir=self.job_dir
-                    )
-
-                remove_lock(os.path.join(saveto, f'{wsi.name}.jpg'))
-
-                gdf = gpd.read_file(gdf_saveto, rows=1)
-                if gdf.empty:
-                    update_log(os.path.join(self.job_dir, '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', 'Segmentation returned empty GeoDataFrame.')
-                    self.loop.set_postfix_str(f'Empty GeoDataFrame for {wsi.name}.')
-                else:
-                    update_log(os.path.join(self.job_dir,  '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', 'Tissue segmented.')
-                
-                # Release WSI resources to prevent memory accumulation
-                wsi.release()
-            except Exception as e:
-                if isinstance(e, KeyboardInterrupt):
-                    remove_lock(os.path.join(saveto, f'{wsi.name}.jpg'))
-                # Release WSI resources even on error to prevent memory leaks
-                try:
-                    wsi.release()
-                except Exception:
-                    pass
-                if self.skip_errors:
-                    update_log(os.path.join(self.job_dir, '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', f'ERROR: {e}')
-                    continue
-                else:
-                    raise e """
-                
         # Return the directory where the contours are saved
         return saveto
 
@@ -329,57 +276,69 @@ class Processor:
         saveto: str | None = None, 
         min_tissue_proportion: float = 0.,
     ) -> str:
+
         if saveto is None:
             saveto = f"{target_magnification}x_{patch_size}px_{overlap}px_overlap"
 
         self.target_magnification = target_magnification
 
-        """ if visualize:
-            save_patch_viz = os.path.join(saveto, 'visualization')
-            os.makedirs(os.path.join(self.job_dir, save_patch_viz), exist_ok=True) """
+        logger.info("🚀 Starting patching job")
+        logger.info(f"Total WSIs: {len(self.wsis)}")
+        logger.info(f"Magnification: {target_magnification}, Patch size: {patch_size}, Overlap: {overlap}")
 
         os.makedirs(os.path.join(self.job_dir, saveto, 'patches'), exist_ok=True)
 
-        sig = signature(self.run_patching_job)
-        local_attrs = {k: v for k, v in locals().items() if k in sig.parameters}
-        """ self.save_config(
-            saveto=os.path.join(self.job_dir, saveto, '_config_coords.json'),
-            local_attrs=local_attrs,
-            ignore=['segmentation_model', 'loop', 'valid_slides', 'wsis']
-        ) """
-
         self.loop = tqdm(self.wsis, desc=f'Saving tissue coordinates to {saveto}', total=len(self.wsis))
+
         for wsi in self.loop:
 
-            # ← CSV au lieu du H5
+            logger.info("=" * 60)
+            logger.info(f"🧠 Processing WSI: {getattr(wsi, 'name', 'UNKNOWN')}")
+
+            # Debug WSI
+            logger.info(f"Path: {getattr(wsi, 'path', 'N/A')}")
+            logger.info(f"Ext: {getattr(wsi, 'ext', 'N/A')}")
+            logger.info(f"Seg path: {getattr(wsi, 'tissue_seg_path', 'N/A')}")
+
             csv_path = os.path.join(self.job_dir, saveto, 'patches', f'{wsi.name}_patches.csv')
 
+            logger.info(f"CSV path: {csv_path}")
+            logger.info(f"CSV exists: {os.path.exists(csv_path)}")
+
             if os.path.exists(csv_path):
-                self.loop.set_postfix_str(f'Patch coords already generated for {wsi.name}. Skipping...')
-                update_log(os.path.join(self.job_dir, saveto, '_logs_coords.txt'), f'{wsi.name}{wsi.ext}', 'Coords generated')
+                logger.info("⏭️ Already processed, skipping")
                 continue
 
             if is_locked(csv_path):
-                self.loop.set_postfix_str(f'{wsi.name} is locked. Skipping...')
+                logger.warning("🔒 File is locked, skipping")
                 continue
 
             if wsi.tissue_seg_path is None or not os.path.exists(wsi.tissue_seg_path):
-                self.loop.set_postfix_str(f'GeoJSON not found for {wsi.name}. Skipping...')
-                update_log(os.path.join(self.job_dir, saveto, '_logs_coords.txt'), f'{wsi.name}{wsi.ext}', 'GeoJSON not found.')
+                logger.warning("❌ GeoJSON missing")
                 continue
 
-            gdf = gpd.read_file(wsi.tissue_seg_path, rows=1)
-            if gdf.empty:
-                self.loop.set_postfix_str(f'Empty GeoDataFrame for {wsi.name}. Skipping...')
-                update_log(os.path.join(self.job_dir, saveto, '_logs_coords.txt'), f'{wsi.name}{wsi.ext}', 'Empty GeoDataFrame.')
+            # --- GeoJSON debug ---
+            try:
+                gdf = gpd.read_file(wsi.tissue_seg_path)
+                logger.info(f"GDF loaded: {len(gdf)} rows")
+                logger.info(f"GDF columns: {gdf.columns.tolist()}")
+
+                if gdf.empty:
+                    logger.warning("⚠️ Empty GeoDataFrame")
+                    continue
+
+            except Exception as e:
+                logger.error(f"❌ Failed to read GeoJSON: {e}")
+                logger.error(traceback.format_exc())
                 continue
 
             try:
-                self.loop.set_postfix_str(f'Generating patch coords for {wsi.name}{wsi.ext}')
-                update_log(os.path.join(self.job_dir, saveto, '_logs_coords.txt'), f'{wsi.name}{wsi.ext}', 'LOCKED. Generating coords...')
+                logger.info("🔒 Creating lock")
                 create_lock(csv_path)
 
-                # extract_tissue_coords doit retourner un np.ndarray (N, 2) avec [x, y]
+                logger.info("⚙️ Running extract_tissue_coords...")
+                start = time.time()
+
                 coords = wsi.extract_tissue_coords(
                     target_mag=target_magnification,
                     patch_size=patch_size,
@@ -388,33 +347,71 @@ class Processor:
                     min_tissue_proportion=min_tissue_proportion,
                 )
 
+                elapsed = time.time() - start
+                logger.info(f"⏱️ Extraction done in {elapsed:.2f}s")
+
+                # --- Debug coords ---
+                logger.info(f"Coords type: {type(coords)}")
+
+                if coords is None:
+                    logger.error("❌ coords is None")
+                    continue
+
+                try:
+                    logger.info(f"Coords length: {len(coords)}")
+                except Exception:
+                    logger.warning("Coords has no length")
+
+                coords = np.array(coords)
+
+                logger.info(f"Coords shape: {coords.shape}")
+
+                if coords.ndim != 2 or coords.shape[1] != 2:
+                    logger.error(f"❌ Invalid coords shape: {coords.shape}")
+                    continue
+
+                if len(coords) == 0:
+                    logger.warning("⚠️ Empty coords")
+                    continue
+
+                logger.info(f"Sample coord: {coords[0]}")
+
+                # --- Save CSV ---
+                logger.info("💾 Saving CSV...")
                 pd.DataFrame(coords, columns=['x', 'y']).to_csv(csv_path, index=False)
 
-                #SUPPRIMER FEATURES
-                """ if visualize:
-                    wsi.visualize_coords(
-                        coords_path=csv_path,
-                        save_patch_viz=os.path.join(self.job_dir, save_patch_viz),
-                    )
+                if os.path.exists(csv_path):
+                    logger.info("✅ CSV saved successfully")
+                else:
+                    logger.error("❌ CSV NOT saved")
 
+                logger.info("🔓 Removing lock")
                 remove_lock(csv_path)
-                update_log(os.path.join(self.job_dir, saveto, '_logs_coords.txt'), f'{wsi.name}{wsi.ext}', 'Coords generated')
-                """
-                wsi.release() 
+
+                try:
+                    wsi.release()
+                    logger.info("🧹 WSI released")
+                except Exception as e:
+                    logger.warning(f"Release failed: {e}")
 
             except Exception as e:
-                if isinstance(e, KeyboardInterrupt):
-                    remove_lock(csv_path)
+                logger.error(f"💥 Error on {wsi.name}: {e}")
+                logger.error(traceback.format_exc())
+
+                remove_lock(csv_path)
+
                 try:
                     wsi.release()
                 except Exception:
                     pass
-                """ if self.skip_errors:
-                    update_log(os.path.join(self.job_dir, saveto, '_logs_coords.txt'), f'{wsi.name}{wsi.ext}', f'ERROR: {e}')
+
+                if self.skip_errors:
                     continue
                 else:
-                    raise e
- """
+                    raise
+
+        logger.info("🏁 Patching job completed")
+
         return os.path.join(self.job_dir, saveto)
 
     @deprecated
