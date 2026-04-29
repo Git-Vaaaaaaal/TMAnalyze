@@ -528,6 +528,8 @@ class Processor:
         self,
         slide_encoder: torch.nn.Module,
         coords_dir: str,
+        patch_size: int,
+        target_mag: int,
         device: str = 'cuda',
         batch_limit: int = 512,
         saveto: str | None = None,
@@ -572,6 +574,8 @@ class Processor:
             self.run_patch_feature_extraction_job(
                 coords_dir=coords_dir,
                 patch_encoder=patch_encoder,
+                patch_size=patch_size, 
+                target_mag=target_mag,
                 device=device,
                 batch_limit=batch_limit,
                 # ← saveas supprimé : run_patch_feature_extraction_job produit toujours du CSV
