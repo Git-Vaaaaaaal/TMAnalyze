@@ -292,49 +292,10 @@ class Processor:
 
         for wsi in self.loop:
 
-            logger.info("=" * 60)
-            logger.info(f"🧠 Processing WSI: {getattr(wsi, 'name', 'UNKNOWN')}")
-
-            # Debug WSI
-            logger.info(f"Path: {getattr(wsi, 'slide_path', 'N/A')}")
-            logger.info(f"Ext: {getattr(wsi, 'ext', 'N/A')}")
-            logger.info(f"Seg path: {getattr(wsi, 'tissue_seg_path', 'N/A')}")
-
             csv_path = os.path.join(self.job_dir, saveto, 'patches', f'{wsi.name}_patches.csv')
-
-            logger.info(f"CSV path: {csv_path}")
-            logger.info(f"CSV exists: {os.path.exists(csv_path)}")
-
-            if os.path.exists(csv_path):
-                logger.info("⏭️ Already processed, skipping")
-                continue
-
-            if is_locked(csv_path):
-                logger.warning("🔒 File is locked, skipping")
-                continue
-
-            if wsi.tissue_seg_path is None or not os.path.exists(wsi.tissue_seg_path):
-                logger.warning("❌ GeoJSON missing")
-                continue
-
-            # --- GeoJSON debug ---
-            try:
-                gdf = gpd.read_file(wsi.tissue_seg_path)
-                logger.info(f"GDF loaded: {len(gdf)} rows")
-                logger.info(f"GDF columns: {gdf.columns.tolist()}")
-
-                if gdf.empty:
-                    logger.warning("⚠️ Empty GeoDataFrame")
-                    continue
-
-            except Exception as e:
-                logger.error(f"❌ Failed to read GeoJSON: {e}")
-                logger.error(traceback.format_exc())
-                continue
 
             try:
                 logger.info("🔒 Creating lock")
-                create_lock(csv_path)
 
                 logger.info("⚙️ Running extract_tissue_coords...")
                 start = time.time()
@@ -348,61 +309,10 @@ class Processor:
                 )
                 df_coords = pd.DataFrame(coords, columns=['x', 'y'])
                 df_coords.to_csv(csv_path, index=False)
-                remove_lock(csv_path)
 
                 elapsed = time.time() - start
-                logger.info(f"⏱️ Extraction done in {elapsed:.2f}s")
-
-                # --- Debug coords ---
-                logger.info(f"Coords type: {type(coords)}")
-
-                if coords is None:
-                    logger.error("❌ coords is None")
-                    continue
-
-                try:
-                    logger.info(f"Coords length: {len(coords)}")
-                except Exception:
-                    logger.warning("Coords has no length")
-
-                coords = np.array(coords)
-
-                logger.info(f"Coords shape: {coords.shape}")
-
-                if coords.ndim != 2 or coords.shape[1] != 2:
-                    logger.error(f"❌ Invalid coords shape: {coords.shape}")
-                    continue
-
-                if len(coords) == 0:
-                    logger.warning("⚠️ Empty coords")
-                    continue
-
-                logger.info(f"Sample coord: {coords[0]}")
-
-                # --- Save CSV ---
-                logger.info("💾 Saving CSV...")
-                pd.DataFrame(coords, columns=['x', 'y']).to_csv(csv_path, index=False)
-
-                if os.path.exists(csv_path):
-                    logger.info("✅ CSV saved successfully")
-                else:
-                    logger.error("❌ CSV NOT saved")
-
-                logger.info("🔓 Removing lock")
                 
-
-                try:
-                    wsi.release()
-                    logger.info("🧹 WSI released")
-                except Exception as e:
-                    logger.warning(f"Release failed: {e}")
-
-            except Exception as e:
-                logger.error(f"💥 Error on {wsi.name}: {e}")
-                logger.error(traceback.format_exc())
-
-                remove_lock(csv_path)
-
+            except:
                 try:
                     wsi.release()
                 except Exception:
@@ -412,8 +322,6 @@ class Processor:
                     continue
                 else:
                     raise
-
-        logger.info("🏁 Patching job completed")
 
         return os.path.join(self.job_dir, saveto)
 
