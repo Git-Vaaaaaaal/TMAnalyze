@@ -848,9 +848,9 @@ class WSI:
         )
 
         # ← Sauvegarde CSV
-        os.makedirs(save_features, exist_ok=True)
-        csv_path = os.path.join(save_features, f'{self.name}.csv')
-        df.to_csv(csv_path, index=False)
+        #os.makedirs(save_features, exist_ok=True)
+        #csv_path = os.path.join(save_features, f'{self.name}.csv')
+        #df.to_csv(csv_path, index=False)
 
         return df
     @torch.inference_mode()
