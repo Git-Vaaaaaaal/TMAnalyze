@@ -296,7 +296,7 @@ class Processor:
             logger.info(f"🧠 Processing WSI: {getattr(wsi, 'name', 'UNKNOWN')}")
 
             # Debug WSI
-            logger.info(f"Path: {getattr(wsi, 'path', 'N/A')}")
+            logger.info(f"Path: {getattr(wsi, 'slide_path', 'N/A')}")
             logger.info(f"Ext: {getattr(wsi, 'ext', 'N/A')}")
             logger.info(f"Seg path: {getattr(wsi, 'tissue_seg_path', 'N/A')}")
 
@@ -346,6 +346,9 @@ class Processor:
                     overlap=overlap,
                     min_tissue_proportion=min_tissue_proportion,
                 )
+                df_coords = pd.DataFrame(coords, columns=['x', 'y'])
+                df_coords.to_csv(csv_path, index=False)
+                remove_lock(csv_path)
 
                 elapsed = time.time() - start
                 logger.info(f"⏱️ Extraction done in {elapsed:.2f}s")
@@ -386,7 +389,7 @@ class Processor:
                     logger.error("❌ CSV NOT saved")
 
                 logger.info("🔓 Removing lock")
-                remove_lock(csv_path)
+                
 
                 try:
                     wsi.release()
