@@ -636,13 +636,13 @@ class WSI:
         raise ValueError(f"No suitable level found for downsample {downsample}.")
 
     def extract_tissue_coords(
-        self,
-        target_mag: int,
-        patch_size: int,
-        save_coords: str,
-        overlap: int = 0,
-        min_tissue_proportion: float = 0.,
-    ) -> pd.DataFrame:
+            self,
+            target_mag: int,
+            patch_size: int,
+            save_coords: str,
+            overlap: int = 0,
+            min_tissue_proportion: float = 0.,
+        ) -> pd.DataFrame:
         """
         Extract patch coordinates from tissue regions in the WSI.
 
@@ -686,8 +686,15 @@ class WSI:
         )
 
         coords_to_keep = [(x, y) for x, y in patcher]
+        df = pd.DataFrame(coords_to_keep, columns=['x', 'y'])
 
-        return pd.DataFrame(coords_to_keep, columns=['x', 'y'])
+        # ✅ Sauvegarde en CSV (manquait complètement)
+        import os
+        os.makedirs(save_coords, exist_ok=True)
+        csv_path = os.path.join(save_coords, f"{self.name}.csv")  # adapte self.name si besoin
+        df.to_csv(csv_path, index=False)
+
+        return df
 
     #SUPPRIMER FEATURES
     def visualize_coords(self, coords_path: str, save_patch_viz: str) -> str:
