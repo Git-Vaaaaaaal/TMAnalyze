@@ -13,8 +13,8 @@ from trident.segmentation_models.load import SegmentationModel
 from trident.wsi_objects.WSIPatcher import *
 from trident.wsi_objects.WSIPatcherDataset import WSIPatcherDataset
 from trident.IO import (
-    save_h5, read_coords,
-    mask_to_gdf, overlay_gdf_on_thumbnail, get_num_workers, coords_to_h5
+    read_coords,
+    mask_to_gdf, overlay_gdf_on_thumbnail, get_num_workers
 )
 
 ReadMode = Literal['pil', 'numpy']

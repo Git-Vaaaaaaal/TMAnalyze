@@ -12,11 +12,11 @@ import TMAx
 import cv2
 import json
 
-from trident import load_wsi, WSIReaderType
 from trident.IO import create_lock, remove_lock, is_locked, update_log, collect_valid_slides
 from trident.Maintenance import deprecated
 from trident.wsi_objects.WSIFactory import OPENSLIDE_EXTENSIONS, PIL_EXTENSIONS, SDPC_EXTENSIONS
-
+from class_wsi_claude import WSI  # ← ta classe personnalisée
+import openslide
 
 import os
 import time
@@ -173,14 +173,14 @@ class Processor:
             if not os.path.exists(tissue_seg_path):
                 tissue_seg_path = None
 
-            slide = load_wsi(
+            slide = WSI(
                 slide_path=abs_path,
                 name=name,
                 tissue_seg_path=tissue_seg_path,
                 custom_mpp_keys=self.custom_mpp_keys,
                 mpp=valid_mpps[wsi_idx] if valid_mpps is not None else None,
                 max_workers=self.max_workers,
-                reader_type=reader_type,
+                lazy_init=True,
             )
             self.wsis.append(slide)
 
