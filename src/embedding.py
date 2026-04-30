@@ -76,6 +76,6 @@ def running_slide_embedding(processor, slide_model, magnification, patch_size):
         coords_dir=f'{magnification}x_{patch_size}px_{0}px_overlap',
         patch_size=patch_size,
         target_mag=magnification,
-        device=f'cuda:{gpu}',
-        results_df=df_result
+        slide_model=slide_model,
+        device=f'cuda:{gpu}'
     )

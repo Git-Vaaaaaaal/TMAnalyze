@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -12,20 +13,29 @@ import matplotlib.pyplot as plt
 # ---------------------------
 # CONFIG
 # ---------------------------
-FEATURES_CSV = "features.csv"
-LABELS_CSV = "labels.csv"  # mettre None si déjà dans features
+MARKER = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
 
-FILENAME_COL = "filename"
-LABEL_COL = "label"
+MAIN_CSV = "id_label_patient_complete.csv"
+FILENAME_COL = "wsi_name"
+LABEL_COL = "status"
+
+
+def record_csv_label(csv_path, marker):
+    df = pd.read_csv(csv_path)
+    df_marker = df[df["stain"] == marker]
+    path = f"{marker}_labels.csv"
+    df_marker.to_csv(path)
+    return path 
 
 # ---------------------------
 # LOAD DATA
 # ---------------------------
-def load_data(features_csv, labels_csv=None):
+def load_data(features_csv, filename_col, label_col, labels_csv=None):
     df = pd.read_csv(features_csv)
 
     if labels_csv is not None:
         labels_df = pd.read_csv(labels_csv)
+        labels_df = labels_df[[filename_col, label_col]]
 
         # merge sur filename
         df = df.merge(labels_df, on=FILENAME_COL)
@@ -68,7 +78,7 @@ def clustering_test(X, y):
 # ---------------------------
 # VISUALIZATION
 # ---------------------------
-def visualize(X, y):
+def visualize(X, y, marker:str):
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
@@ -80,7 +90,10 @@ def visualize(X, y):
     plt.title("PCA")
     plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap="tab10")
     plt.colorbar()
+    marker_fig = os.path.join("figure", f"pca_{marker}.png")
+    plt.savefig(marker_fig)
     plt.show()
+    
 
     # t-SNE
     tsne = TSNE(n_components=2, perplexity=30, random_state=42)
@@ -90,16 +103,26 @@ def visualize(X, y):
     plt.title("t-SNE")
     plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap="tab10")
     plt.colorbar()
+    tsne_path = os.path.join("figure", f"tsne_{marker}.png")
+    plt.savefig(tsne_path)
     plt.show()
+    
 
 # ---------------------------
 # MAIN
 # ---------------------------
-if __name__ == "__main__":
-    X, y = load_data(FEATURES_CSV, LABELS_CSV)
 
+for marker in MARKER :
+    os.makedirs("figure", exist_ok=True)
+    FEATURES_CSV = f"{marker}/job_dir/20.0x_64px_0px_overlap/slide_encoder_{marker}.csv"
+    LABELS_CSV = record_csv_label(MAIN_CSV, marker) # mettre None si déjà dans features
+
+
+    X, y = load_data(FEATURES_CSV, FILENAME_COL, LABEL_COL, LABELS_CSV)
+    print(f"{marker} start")
     print(f"Dataset shape: {X.shape}")
 
     classification_test(X, y)
     clustering_test(X, y)
-    visualize(X, y)
+    visualize(X, y, marker)
+    print(f"{marker} end")
