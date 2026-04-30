@@ -392,9 +392,9 @@ class WSI:
         coords = [(x, y) for x, y in patcher]
         df = pd.DataFrame(coords, columns=['x', 'y'])
 
-        os.makedirs(save_coords, exist_ok=True)
-        csv_path = os.path.join(save_coords, f'{self.name}_patches.csv')
-        df.to_csv(csv_path, index=False)
+        #os.makedirs(save_coords, exist_ok=True)
+        #csv_path = os.path.join(save_coords, f'{self.name}_patches.csv')
+        #df.to_csv(csv_path, index=False)
 
         return df
 

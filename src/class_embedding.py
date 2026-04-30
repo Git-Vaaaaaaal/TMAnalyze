@@ -15,7 +15,7 @@ import json
 from trident.IO import create_lock, remove_lock, is_locked, update_log, collect_valid_slides
 from trident.Maintenance import deprecated
 from trident.wsi_objects.WSIFactory import OPENSLIDE_EXTENSIONS, PIL_EXTENSIONS, SDPC_EXTENSIONS
-from class_wsi_claude import WSI  # ← ta classe personnalisée
+from src.class_wsi_claude import WSI  # ← ta classe personnalisée
 import openslide
 
 import os
@@ -41,13 +41,12 @@ class Processor:
         job_dir: str,
         wsi_source: str,
         wsi_ext: List[str] = None,
-        wsi_cache: Optional[str] = None,
+        wsi_cache: Optional[str]= None,
         clear_cache: bool = False,
         skip_errors: bool = False,
         custom_mpp_keys: Optional[List[str]] = None,
         custom_list_of_wsis: Optional[str] = None,
         max_workers: Optional[int] = None,
-        reader_type: Optional[WSIReaderType] = None,
         search_nested: bool = False, 
     ) -> None:
         """
@@ -441,7 +440,6 @@ class Processor:
         device: str = 'cuda',
         batch_limit: int = 512,
         saveto: str | None = None,
-        results_df: pd.DataFrame | None = None,  # ← nouveau paramètre
     ) -> str:
         """
         ... (docstring inchangée) ...
@@ -510,9 +508,9 @@ class Processor:
                 self.loop.set_postfix_str(f'Slide features already extracted for {wsi.name}. Skipping...')
                 #update_log(log_fp, f'{wsi.name}{wsi.ext}', 'Slide features extracted.')
                 # ← Relire le CSV existant pour l'intégrer dans results_df
-                if results_df is not None:
-                    row = pd.read_csv(slide_feature_path)
-                    collected_rows.append(row)
+
+                row = pd.read_csv(slide_feature_path)
+                collected_rows.append(row)
                 continue
 
             # ← Patch features en CSV au lieu de H5
@@ -573,14 +571,15 @@ class Processor:
                 else:
                     raise e """
 
-        # ← Merge de toutes les lignes collectées dans le DataFrame fourni en entrée
-        if results_df is not None and collected_rows:
-            new_rows = pd.concat(collected_rows, ignore_index=True)
-            for col in new_rows.columns:
-                results_df[col] = results_df.get(col, pd.NA)
-            results_df = pd.concat([results_df, new_rows], ignore_index=True)
+        results_df = pd.DataFrame()
+        new_rows = pd.concat(collected_rows, ignore_index=True)
+        for col in new_rows.columns:
+            results_df[col] = results_df.get(col, pd.NA)
+        results_df = pd.concat([results_df, new_rows], ignore_index=True)
+        results_df.save_to(os.path.join(self.job_dir, saveto, f"{slide_encoder}_encoder.csv"))
 
-        return os.path.join(self.job_dir, saveto), results_df
+
+        return os.path.join(self.job_dir, saveto)
 
     """ def save_config(
         self,
@@ -662,3 +661,6 @@ class Processor:
         import torch
         gc.collect()
         torch.cuda.empty_cache()
+
+    def concatenate_slide_features(self):
+
