@@ -581,63 +581,6 @@ class Processor:
 
         return os.path.join(self.job_dir, saveto)
 
-    """ def save_config(
-        self,
-        saveto: str,
-        local_attrs: Optional[Dict[str, Any]] = None,
-        ignore: List[str] = ['valid_slides']
-    ) -> None:
-        The `save_config` function saves the current configuration of the `Processor` instance to a JSON file. 
-        This configuration includes attributes of the instance as well as optional additional parameters 
-        provided via the `local_attrs` argument.
-
-        The function filters out attributes specified in the `ignore` list and ensures that only JSON-serializable 
-        attributes are included. This makes it ideal for saving configurations in a structured format that can 
-        later be reloaded or inspected for reproducibility.
-
-        Parameters:
-            saveto (str): 
-                The path to the file where the configuration will be saved. This should include the file extension 
-                (e.g., "config.json").
-            local_attrs (dict, optional): 
-                A dictionary of additional attributes to include in the configuration. This can be used to add 
-                method-specific parameters or runtime settings. Defaults to None.
-            ignore (list, optional): 
-                A list of attribute names to exclude from the configuration. This is useful for omitting large 
-                or non-serializable objects. Defaults to ['valid_slides'].
-
-        Returns:
-            None: The function saves the configuration to the specified file and does not return any value.
-
-        Example
-        -------
-        Save the current processor configuration to a file:
-
-        >>> processor.save_config(saveto="output/config.json")
-        >>> # Check the saved configuration
-        >>> with open("output/config.json", "r") as f:
-        ...     config = json.load(f)
-        ...     print(config)
-        from trident.IO import JSONsaver
-
-        def serialize_safe(obj):
-            try:
-                return json.loads(json.dumps(obj))  # Ensure the object is JSON-serializable
-            except (TypeError, OverflowError):
-                return None
-
-        # Merge instance attributes and local_attrs, filtering ignored and unserializable items
-        config = {
-            k: serialize_safe(v)
-            for attr_dict in [vars(self), local_attrs or {}]
-            for k, v in attr_dict.items()
-            if k not in ignore and serialize_safe(v) is not None
-        }
-
-        # Save the combined configuration to the specified file
-        with open(saveto, 'w') as f:
-            json.dump(config, f, indent=4, cls=JSONsaver) """
-
     def release(self) -> None:
         """
         Release all resources tied to the WSIs held by this Processor instance.
