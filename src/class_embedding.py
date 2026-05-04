@@ -61,8 +61,7 @@ class Processor:
             
         Parameters:
             job_dir (str): 
-                The directory where the results of processing, including segmentations, patches, and extracted features, 
-                will be saved. This should be an existing directory with sufficient storage.
+                Directory where image and results are stored
             wsi_source (str): 
                 The directory containing the WSIs to be processed. This can either be a local directory 
                 or a network-mounted drive. All slides in this directory matching the specified file 
@@ -126,7 +125,7 @@ class Processor:
             raise EnvironmentError("Trident requires Python 3.9 or above. Python 3.10 is recommended.")
 
         self.job_dir = job_dir
-        self.wsi_source = wsi_source
+        self.wsi_source = os.path.join(job_dir, wsi_source)
         self.wsi_ext = wsi_ext or (list(PIL_EXTENSIONS) + list(OPENSLIDE_EXTENSIONS) + list(SDPC_EXTENSIONS))
         self.skip_errors = skip_errors
         self.custom_mpp_keys = custom_mpp_keys
@@ -272,12 +271,9 @@ class Processor:
         target_magnification: int, 
         patch_size: int, 
         overlap: int = 0, 
-        saveto: str | None = None, 
         min_tissue_proportion: float = 0.,
     ) -> str:
 
-        if saveto is None:
-            saveto = f"{target_magnification}x_{patch_size}px_{overlap}px_overlap"
 
         self.target_magnification = target_magnification
 
@@ -285,13 +281,13 @@ class Processor:
         logger.info(f"Total WSIs: {len(self.wsis)}")
         logger.info(f"Magnification: {target_magnification}, Patch size: {patch_size}, Overlap: {overlap}")
 
-        os.makedirs(os.path.join(self.job_dir, saveto, 'patches'), exist_ok=True)
+        os.makedirs(os.path.join(self.job_dir, 'patches'), exist_ok=True)
 
-        self.loop = tqdm(self.wsis, desc=f'Saving tissue coordinates to {saveto}', total=len(self.wsis))
+        self.loop = tqdm(self.wsis, desc=f'Saving tissue coordinates to {self.job_dir}', total=len(self.wsis))
 
         for wsi in self.loop:
 
-            csv_path = os.path.join(self.job_dir, saveto, 'patches', f'{wsi.name}_patches.csv')
+            csv_path = os.path.join(self.job_dir, 'patches', f'{wsi.name}_patches.csv')
 
             try:
                 logger.info("🔒 Creating lock")
@@ -302,7 +298,7 @@ class Processor:
                 coords = wsi.extract_tissue_coords(
                     target_mag=target_magnification,
                     patch_size=patch_size,
-                    save_coords=os.path.join(self.job_dir, saveto),
+                    save_coords=os.path.join(self.job_dir, "patches"),
                     overlap=overlap,
                     min_tissue_proportion=min_tissue_proportion,
                 )
@@ -322,7 +318,7 @@ class Processor:
                 else:
                     raise
 
-        return os.path.join(self.job_dir, saveto)
+        return os.path.join(self.job_dir, "patches")
 
     @deprecated
     def run_feature_extraction_job(
@@ -331,105 +327,90 @@ class Processor:
         patch_encoder: torch.nn.Module, 
         device: str,  
         batch_limit: int = 512, 
-        saveto: str | None = None
     ) -> str:
         self.run_patch_feature_extraction_job(
             coords_dir, 
             patch_encoder, 
             device, 
             batch_limit, 
-            saveto,
         )
         
     def run_patch_feature_extraction_job(
-        self, 
-        coords_dir: str, 
-        patch_encoder: torch.nn.Module, 
-        patch_size: int,    
-        target_mag: int,   #ADDED
-        device: str, 
-        batch_limit: int = 512, 
-        saveto: str | None = None
+        self,
+        patch_encoder: torch.nn.Module,
+        patch_size: int,
+        target_mag: int,
+        device: str,
+        batch_limit: int = 512,
     ) -> str:
-        # Le paramètre saveas est supprimé : la sortie est toujours CSV
-        if saveto is None:
-            saveto = os.path.join(coords_dir, f'features_{patch_encoder.enc_name}')
 
-        os.makedirs(os.path.join(self.job_dir, saveto), exist_ok=True)
+        save_dir = os.path.join(self.job_dir, f'features_{patch_encoder.enc_name}')
+        os.makedirs(save_dir, exist_ok=True)
 
-        sig = signature(self.run_patch_feature_extraction_job)
-        local_attrs = {k: v for k, v in locals().items() if k in sig.parameters}
-        """ self.save_config(
-            saveto=os.path.join(self.job_dir, coords_dir, f'_config_feats_{patch_encoder.enc_name}.json'),
-            local_attrs=local_attrs,
-            ignore=['patch_encoder', 'loop', 'valid_slides', 'wsis']
-        ) """
+        self.loop = tqdm(
+            self.wsis,
+            desc='Extracting patch features',
+            total=len(self.wsis)
+        )
 
-        #log_fp = os.path.join(self.job_dir, coords_dir, f'_logs_feats_{patch_encoder.enc_name}.txt')
-        self.loop = tqdm(self.wsis, desc=f'Extracting patch features from coords in {coords_dir}', total=len(self.wsis))
         for wsi in self.loop:
 
-            csv_path = os.path.join(self.job_dir, saveto, f'{wsi.name}.csv')
+            csv_path = os.path.join(save_dir, f'{wsi.name}.csv')
 
             if os.path.exists(csv_path) and not is_locked(csv_path):
-                self.loop.set_postfix_str(f'Features already extracted for {wsi}. Skipping...')
-                #update_log(log_fp, f'{wsi.name}{wsi.ext}', 'Features extracted.')
+                self.loop.set_postfix_str(f'{wsi.name}: already done')
                 continue
 
-            # ← Lecture des coordonnées depuis le CSV produit par run_patching_job
-            coords_path = os.path.join(self.job_dir, coords_dir, 'patches', f'{wsi.name}_patches.csv')
+            coords_path = os.path.join(
+                self.job_dir,
+                'patches',
+                f'{wsi.name}_patches.csv'
+            )
+
             if not os.path.exists(coords_path):
-                self.loop.set_postfix_str(f'Coords not found for {wsi.name}. Skipping...')
-                #update_log(log_fp, f'{wsi.name}{wsi.ext}', 'Coords not found.')
+                self.loop.set_postfix_str(f'{wsi.name}: coords not found')
                 continue
 
             if is_locked(csv_path):
-                self.loop.set_postfix_str(f'{wsi.name} is locked. Skipping...')
+                self.loop.set_postfix_str(f'{wsi.name}: locked')
                 continue
 
             try:
-                self.loop.set_postfix_str(f'Extracting features from {wsi.name}{wsi.ext}')
+                self.loop.set_postfix_str(f'{wsi.name}: extracting')
                 create_lock(csv_path)
-                #update_log(log_fp, f'{wsi.name}{wsi.ext}', 'LOCKED. Extracting features...')
 
-                # extract_patch_features doit retourner un np.ndarray (N, D)
                 features = wsi.extract_patch_features(
                     patch_encoder=patch_encoder,
                     coords_path=coords_path,
-                    save_features=os.path.join(self.job_dir, saveto),
+                    save_features=save_dir,
                     patch_size=patch_size,
                     target_mag=target_mag,
                     device=device,
                     batch_limit=batch_limit,
                 )
 
-                # ← Lecture des coordonnées x, y pour les coller en tête du CSV
                 coords = pd.read_csv(coords_path)[['x', 'y']].values
                 feat_cols = [f'feat_{i}' for i in range(features.shape[1])]
+
                 df = pd.DataFrame(
-                    data=np.hstack([coords, features]),
+                    np.hstack([coords, features]),
                     columns=['x', 'y'] + feat_cols,
                 )
+
                 df.to_csv(csv_path, index=False)
 
                 remove_lock(csv_path)
-                #update_log(log_fp, f'{wsi.name}{wsi.ext}', 'Features extracted.')
                 wsi.release()
 
             except Exception as e:
-                if isinstance(e, KeyboardInterrupt):
-                    remove_lock(csv_path)
+                remove_lock(csv_path)
                 try:
                     wsi.release()
                 except Exception:
                     pass
-                """ if self.skip_errors:
-                    #update_log(log_fp, f'{wsi.name}{wsi.ext}', f'ERROR: {e}')
-                    continue
-                else:
-                    raise e """
+                raise e
 
-        return os.path.join(self.job_dir, saveto)
+        return save_dir
 
     def run_slide_feature_extraction_job(
         self,
@@ -589,6 +570,4 @@ class Processor:
         import torch
         gc.collect()
         torch.cuda.empty_cache()
-
-    def concatenate_slide_features(self):
 

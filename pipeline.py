@@ -14,7 +14,7 @@ list_marker = ["BCL2", "BCL6", "HE", "CD10", "MUM1", "MYC"]
 
 for marker in list_marker :
     #Partie 1 : Embeddings
-    job_dir = f"{marker}/job_dir"
+    job_dir = f"{marker}"
     wsi_source = f"{marker}/wsi_source"
     wsi_ext = [".tiff"]
     wsi_cache = "cache/"
