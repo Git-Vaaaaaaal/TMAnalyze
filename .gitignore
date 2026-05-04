@@ -7,4 +7,10 @@ env.py
 /HE
 /CD10
 /MYC
+temporary_cleaning.csv
+*.csv
+*.png
+/prism
+/figure
+
 /rebuilt.prism

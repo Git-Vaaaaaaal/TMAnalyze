@@ -437,20 +437,12 @@ class Processor:
         coords_dir: str,
         patch_size: int,
         target_mag: int,
+        slide_model: str,
         device: str = 'cuda',
         batch_limit: int = 512,
         saveto: str | None = None,
     ) -> str:
-        """
-        ... (docstring inchangée) ...
-        
-        Args:
-            ...
-            results_df (pd.DataFrame | None): DataFrame optionnel dans lequel les features
-                slide extraites sont accumulées. Chaque ligne correspond à un WSI, avec
-                les colonnes 'wsi_name' suivies des features. Si None, aucun DataFrame
-                n'est rempli. Le DataFrame est modifié in-place ET retourné.
-        """
+
         from trident.slide_encoder_models.load import slide_to_patch_encoder_name
 
         if slide_encoder.enc_name.startswith('mean-'):
@@ -489,14 +481,8 @@ class Processor:
 
         sig = signature(self.run_slide_feature_extraction_job)
         local_attrs = {k: v for k, v in locals().items() if k in sig.parameters}
-        """ self.save_config(
-            saveto=os.path.join(self.job_dir, coords_dir, f'_config_slide_features_{slide_encoder.enc_name}.json'),
-            local_attrs=local_attrs,
-            ignore=['loop', 'valid_slides', 'wsis', 'results_df']  # ← results_df ignoré dans le config
-        ) """
 
-        #log_fp = os.path.join(self.job_dir, coords_dir, f'_logs_slide_features_{slide_encoder.enc_name}.txt')
-        collected_rows = []  # ← accumulateur local avant merge dans results_df
+        collected_rows = [] 
 
         self.loop = tqdm(self.wsis, desc=f'Extracting slide features using {slide_encoder.enc_name}', total=len(self.wsis))
         for wsi in self.loop:
@@ -551,8 +537,7 @@ class Processor:
                 row_df.insert(0, 'wsi_name', wsi.name)
                 row_df.to_csv(slide_feature_path, index=False)
 
-                if results_df is not None:
-                    collected_rows.append(row_df)
+                collected_rows.append(row_df)
 
                 remove_lock(slide_feature_path)
                 #update_log(log_fp, f'{wsi.name}{wsi.ext}', 'Slide features extracted.')
@@ -576,7 +561,7 @@ class Processor:
         for col in new_rows.columns:
             results_df[col] = results_df.get(col, pd.NA)
         results_df = pd.concat([results_df, new_rows], ignore_index=True)
-        results_df.save_to(os.path.join(self.job_dir, saveto, f"{slide_encoder}_encoder.csv"))
+        results_df.to_csv(os.path.join(self.job_dir, saveto, f"{slide_model}_encoder.csv"))
 
 
         return os.path.join(self.job_dir, saveto)
