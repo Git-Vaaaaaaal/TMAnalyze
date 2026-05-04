@@ -415,7 +415,6 @@ class Processor:
     def run_slide_feature_extraction_job(
         self,
         slide_encoder: torch.nn.Module,
-        coords_dir: str,
         patch_size: int,
         target_mag: int,
         slide_model: str,
@@ -423,17 +422,31 @@ class Processor:
         batch_limit: int = 512,
         saveto: str | None = None,
     ) -> str:
+        
+        slide_to_patch_encoder_name = {
+        'threads': 'conch_v15',
+        'titan': 'conch_v15',
+        'tcga': 'conch_v15',
+        'prism': 'virchow',
+        'chief': 'ctranspath',
+        'gigapath': 'gigapath',
+        'madeleine': 'conch_v1',
+        'feather': 'conch_v15'
+        }
+
+        patch_model_name = slide_to_patch_encoder_name.get(slide_model)
+        patch_features_dir = f'features_{patch_model_name}'
+
 
         from trident.slide_encoder_models.load import slide_to_patch_encoder_name
 
+        #Slide encoder name
         if slide_encoder.enc_name.startswith('mean-'):
             slide_to_patch_encoder_name[slide_encoder.enc_name] = slide_encoder.enc_name.split('mean-')[1]
 
-        # Setting I/O
-        mustbe_patch_encoder = slide_to_patch_encoder_name[slide_encoder.enc_name]
-        patch_features_dir = os.path.join(coords_dir, f'features_{mustbe_patch_encoder}')
+
         if saveto is None:
-            saveto = os.path.join(coords_dir, f'slide_features_{slide_encoder.enc_name}')
+            saveto = f'slide_features_{slide_encoder.enc_name}'
         os.makedirs(os.path.join(self.job_dir, saveto), exist_ok=True)
 
         already_processed = []
@@ -451,7 +464,6 @@ class Processor:
             from trident.patch_encoder_models.load import encoder_factory
             patch_encoder = encoder_factory(slide_to_patch_encoder_name[slide_encoder.enc_name])
             self.run_patch_feature_extraction_job(
-                coords_dir=coords_dir,
                 patch_encoder=patch_encoder,
                 patch_size=patch_size, 
                 target_mag=target_mag,
@@ -516,36 +528,27 @@ class Processor:
                 row_data = np.atleast_1d(slide_features).reshape(1, -1)
                 row_df = pd.DataFrame(row_data, columns=feat_cols)
                 row_df.insert(0, 'wsi_name', wsi.name)
-                row_df.to_csv(slide_feature_path, index=False)
 
                 collected_rows.append(row_df)
 
                 remove_lock(slide_feature_path)
-                #update_log(log_fp, f'{wsi.name}{wsi.ext}', 'Slide features extracted.')
                 wsi.release()
 
             except Exception as e:
-                if isinstance(e, KeyboardInterrupt):
-                    remove_lock(slide_feature_path)
-                try:
-                    wsi.release()
-                except Exception:
-                    pass
-                """ if self.skip_errors:
-                    update_log(log_fp, f'{wsi.name}{wsi.ext}', f'ERROR: {e}')
-                    continue
-                else:
-                    raise e """
-
-        results_df = pd.DataFrame()
-        new_rows = pd.concat(collected_rows, ignore_index=True)
-        for col in new_rows.columns:
-            results_df[col] = results_df.get(col, pd.NA)
-        results_df = pd.concat([results_df, new_rows], ignore_index=True)
-        results_df.to_csv(os.path.join(self.job_dir, saveto, f"{slide_model}_encoder.csv"))
+                print(f"[ERROR] Failed on {wsi.name}: {e}")
 
 
-        return os.path.join(self.job_dir, saveto)
+        if len(collected_rows) == 0:
+            print("[WARNING] No slide features were collected. Nothing will be saved.")
+            return os.path.join(self.job_dir, saveto)
+
+        results_df = pd.concat(collected_rows, ignore_index=True)
+        save_df = results_df.to_csv(
+            os.path.join(self.job_dir, saveto, f"{slide_model}_encoder.csv"),
+            index=False
+        )
+
+        return save_df
 
     def release(self) -> None:
         """

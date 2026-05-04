@@ -61,7 +61,6 @@ def running_slide_embedding(processor, slide_model, magnification, patch_size):
     model_name = slide_to_patch_encoder_name.get(slide_model)
     encoder = encoder_factory(model_name)
     processor.run_patch_feature_extraction_job(
-        coords_dir=f'{magnification}x_{patch_size}px_{0}px_overlap',
         patch_encoder=encoder,
         patch_size=patch_size,
         target_mag=magnification,
@@ -73,7 +72,6 @@ def running_slide_embedding(processor, slide_model, magnification, patch_size):
     encoder = slide_encoder(slide_model)
     processor.run_slide_feature_extraction_job(
         slide_encoder=encoder,
-        coords_dir=f'{magnification}x_{patch_size}px_{0}px_overlap',
         patch_size=patch_size,
         target_mag=magnification,
         slide_model=slide_model,
