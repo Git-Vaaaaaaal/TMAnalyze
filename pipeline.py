@@ -2,22 +2,22 @@ from src.embedding import running_patch_embedding
 from src.embedding import running_slide_embedding
 from src.class_embedding import Processor
 import torch
-
-
+import os
 
 from huggingface_hub import login
 from env import hf_token
 
 login(hf_token)
 
-list_marker = ["BCL2", "BCL6", "HE", "CD10", "MUM1", "MYC"]
-list_slide_encoder = ["gigapath", "feather", "titan", "madeleine", "chief"]
+list_marker = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
+list_slide_encoder = ["titan", "feather","prism"]
 
 for marker in list_marker :
     for slide_encoder in list_slide_encoder :
+        path = os.path.join("data", f"{slide_encoder}")
         #Partie 1 : Embeddings
-        job_dir = f"{marker}"
-        wsi_source = f"{marker}/wsi_source"
+        job_dir = os.path.join(path, f"{marker}")
+        wsi_source = os.path.join(path, f"{marker}", "wsi_source")
         wsi_ext = [".tiff"]
         wsi_cache = "cache/"
         skip_errors = True

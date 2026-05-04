@@ -625,6 +625,8 @@ class WSI:
         slide_encoder: torch.nn.Module,
         save_features: str,
         device: str = 'cuda',
+        patch_size: Optional[int] = None,
+        target_mag: Optional[int] = None,
     ) -> np.ndarray:
         """
         Encode patch features into a single slide-level feature vector.
@@ -636,6 +638,10 @@ class WSI:
         slide_encoder : torch.nn.Module
         save_features : str
         device : str
+        patch_size : int, optional
+            Patch size at target_mag. Required for models that use patch_size_level0 (TITAN, GigaPath).
+        target_mag : int, optional
+            Target magnification used during patch extraction. Required with patch_size.
 
         Returns
         -------
@@ -647,7 +653,14 @@ class WSI:
         patch_features = torch.from_numpy(features).float().to(device).unsqueeze(0)
         coords_tensor = torch.from_numpy(coords).to(device).unsqueeze(0)
 
-        batch = {'features': patch_features, 'coords': coords_tensor}
+        attributes = {}
+        if patch_size is not None and target_mag is not None:
+            if self.mag is None:
+                self._lazy_initialize()
+            patch_size_level0 = int(patch_size * self.mag / target_mag)
+            attributes['patch_size_level0'] = patch_size_level0
+
+        batch = {'features': patch_features, 'coords': coords_tensor, 'attributes': attributes}
 
         with torch.autocast(
             device_type='cuda',

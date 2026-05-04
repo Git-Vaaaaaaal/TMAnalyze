@@ -520,6 +520,8 @@ class Processor:
                     slide_encoder=slide_encoder,
                     device=device,
                     save_features=os.path.join(self.job_dir, saveto),
+                    patch_size=patch_size,
+                    target_mag=target_mag,
                 )
 
                 # ← Sauvegarde CSV : une ligne = un WSI, colonnes wsi_name + slide features
