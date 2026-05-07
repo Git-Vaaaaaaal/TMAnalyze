@@ -537,6 +537,11 @@ class Processor:
                 wsi.release()
 
             except Exception as e:
+                remove_lock(slide_feature_path)
+                try:
+                    wsi.release()
+                except Exception:
+                    pass
                 print(f"[ERROR] Failed on {wsi.name}: {e}")
 
 
