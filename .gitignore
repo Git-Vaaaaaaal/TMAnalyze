@@ -15,3 +15,5 @@ temporary_cleaning.csv
 /data
 /rebuilt.prism
 /csv
+/outputs
+*.pth
