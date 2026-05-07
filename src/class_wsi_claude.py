@@ -651,7 +651,12 @@ class WSI:
         slide_encoder.eval()
 
         patch_features = torch.from_numpy(features).float().to(device).unsqueeze(0)
-        coords_tensor = torch.from_numpy(coords).to(device).unsqueeze(0)
+        coords_tensor = torch.from_numpy(coords).to(device)
+        if torch.is_floating_point(coords_tensor):
+            coords_tensor = torch.round(coords_tensor).to(torch.int64)
+        else:
+            coords_tensor = coords_tensor.to(torch.int64)
+        coords_tensor = coords_tensor.unsqueeze(0)
 
         attributes = {}
         if patch_size is not None and target_mag is not None:
