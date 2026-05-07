@@ -212,18 +212,3 @@ class CSVMILDataset(torch.utils.data.Dataset):
     
 
 
-
-
-
-dataset = CSVMILDataset(
-    slide_features_csv="slides_features.csv",  # patient_id | feat_0 | feat_1 | ...
-    tiles_dir="tiles/",                         # 13901.csv, 13902.csv, ...
-    labels_csv="labels.csv",                    # patient_id | label
-    bag_keys=["X", "X_slide", "Y", "coords"],
-)
-
-bag = dataset[0]
-bag["X"]       # (n_tuiles, n_features) — features tuiles
-bag["X_slide"] # (n_features_slide,)   — features slide
-bag["Y"]       # label du patient
-bag["coords"]  # (n_tuiles, 2)         — coordonnées x, y
