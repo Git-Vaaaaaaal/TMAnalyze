@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 
-marker_list = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
+marker_list = ["MUM1"]
 
     
 
@@ -36,7 +36,7 @@ def merge_csv_folder(input_dir: str, output_path: str) -> str:
 
 
 for marker in marker_list :
-    path = os.path.join(marker, r"job_dir/20.0x_64px_0px_overlap/slide_features_prism")
-    out = os.path.join(marker, r"job_dir/20.0x_64px_0px_overlap", f"slide_encoder_{marker}.csv")
+    path = os.path.join("rebuilt.prism", "prism", marker, "job_dir", "20.0x_64px_0px_overlap", "slide_features_prism")
+    out = os.path.join("rebuilt.prism", "prism", marker, f"slide_encoder_{marker}.csv")
     merge_csv_folder(path, out)
     print(f"{marker} done")
