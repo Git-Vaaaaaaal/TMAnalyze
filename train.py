@@ -25,7 +25,7 @@ def cleaning_csv(df_path, marker, encoder):
     df_label = df_label[df_label["stain"] == marker]
     dropped_column = ["old_patient_id", "stain", "Age", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
                 "OS", "PFS"]
-    df_label = df_label.drop(column=dropped_column)
+    df_label = df_label.drop(columns=dropped_column)
     out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")
     df_label.to_csv(out_csv_marker, index=False)
     return out_csv_marker
@@ -45,7 +45,7 @@ for marker in marker_list :
             output_path = "outputs"
             final_out = os.path.join(output_path, encoder, marker)
 
-            out_csv_marker = cleaning_csv(dataframe_id)
+            out_csv_marker = cleaning_csv(dataframe_id, marker, encoder)
 
             if encoder == "prism":
                 in_shape = 2560
