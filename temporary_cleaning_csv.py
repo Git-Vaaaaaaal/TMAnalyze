@@ -1,42 +1,53 @@
-import os
 import pandas as pd
 
+input_path = r"csv/id_label_patient_complete.csv"
+label_path = r"csv/clinical_data_cleaned.csv"
 
-marker_list = ["MUM1"]
+list_colonne = ["Age", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
+                "OS", "PFS"]
 
-    
-
-def merge_csv_folder(input_dir: str, output_path: str) -> str:
+def merge_labels(
+    ids_csv    : str,
+    labels_csv : str,
+    on         : str       = "old_patient_id",
+    id_cols    : list[str] = None,
+    label_cols : list[str] = list_colonne,
+    how        : str       = "left",
+) -> pd.DataFrame:
     """
-    Lit tous les CSV d'un dossier et les concatène en un seul fichier.
+    Fusionne les colonnes de labels_csv dans le dataframe ids_csv.
 
     Args:
-        input_dir (str): Dossier contenant les fichiers CSV
-        output_path (str): Chemin du CSV de sortie
+        ids_csv    : chemin vers le CSV contenant les identifiants.
+        labels_csv : chemin vers le CSV contenant les labels.
+        on         : colonne clé de jointure (doit exister dans les deux CSV).
+        id_cols    : colonnes à conserver depuis ids_csv (None = toutes).
+        label_cols : colonnes à récupérer depuis labels_csv (None = toutes sauf doublons).
+        how        : type de jointure pandas — 'left' garde tous les ids.
 
     Returns:
-        str: Chemin du fichier sauvegardé
+        DataFrame fusionné.
     """
-    dfs = []
+    df_ids    = pd.read_csv(ids_csv)
+    df_labels = pd.read_csv(labels_csv)
 
-    for file in os.listdir(input_dir):
-        if file.endswith(".csv"):
-            full_path = os.path.join(input_dir, file)
-            df = pd.read_csv(full_path)
-            dfs.append(df)
+    if id_cols is not None:
+        keep   = [on] + [c for c in id_cols if c != on]
+        df_ids = df_ids[keep]
 
-    if not dfs:
-        raise ValueError("Aucun fichier CSV trouvé dans le dossier.")
+    if label_cols is not None:
+        df_labels = df_labels[[on] + [c for c in label_cols if c != on]]
+    else:
+        cols_to_add = [on] + [c for c in df_labels.columns if c != on and c not in df_ids.columns]
+        df_labels   = df_labels[cols_to_add]
 
-    merged_df = pd.concat(dfs, ignore_index=True)
-    merged_df.to_csv(output_path, index=False)
-
-    return output_path
-
+    return df_ids.merge(df_labels, on=on, how=how)
 
 
-for marker in marker_list :
-    path = os.path.join("rebuilt.prism", "prism", marker, "job_dir", "20.0x_64px_0px_overlap", "slide_features_prism")
-    out = os.path.join("rebuilt.prism", "prism", marker, f"slide_encoder_{marker}.csv")
-    merge_csv_folder(path, out)
-    print(f"{marker} done")
+if __name__ == "__main__":
+    result = merge_labels(
+        ids_csv    = input_path,
+        labels_csv = label_path,
+    )
+    print(result.head())
+    result.to_csv("csv/multi_label_patient_id.csv", index=False)
