@@ -1,0 +1,6 @@
+
+prism, transmil, BCL2, meilleur modèle — epoch 10, val AUC: 0.7517
+
+prism, abmil, BCL2, meilleur modèle — epoch 27, val AUC: 0.6761
+
+prism, dsmil, BCL2, meilleur modèle — epoch 50, val AUC: 0.6289

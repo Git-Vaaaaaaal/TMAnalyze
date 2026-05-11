@@ -29,6 +29,7 @@ def build_dataloaders(cfg):
         tiles_dir=cfg["tiles_dir"],
         labels_csv=cfg["labels_csv"],
         bag_keys=cfg["bag_keys"],
+        slide_id_col=cfg.get("slide_id_col", "patient_id"),
     )
     n_val   = int(len(dataset) * cfg["val_split"])
     n_train = len(dataset) - n_val

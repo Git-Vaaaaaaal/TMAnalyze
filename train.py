@@ -39,36 +39,32 @@ encoder_list = ["prism", "titan", "feather"]
 
 mil_list = ["transmil", "abmil", "dsmil"]
 
+ENCODER_CFG = {
+    "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
+    "titan":   dict(in_shape=768,  tiles_subdir="features_conch_v15", slide_subdir="slide_features_titan",  slide_csv="titan_encoder.csv"),
+    "feather": dict(in_shape=768,  tiles_subdir="features_conch_v15", slide_subdir="slide_features_feather", slide_csv="feather_encoder.csv"),
+}
+
 for marker in marker_list :
     for encoder in encoder_list:
         for mil in mil_list :
-            output_path = "outputs"
-            final_out = os.path.join(output_path, encoder, marker)
-
+            enc = ENCODER_CFG[encoder]
             out_csv_marker = cleaning_csv(dataframe_id, marker, encoder)
 
-            if encoder == "prism":
-                in_shape = 2560
-            elif encoder == "titan":
-                in_shape = 768
-            elif encoder == "feather":
-                in_shape = 768
-
-
-
             CFG = dict(
-                slide_features_csv = os.path.join("data", "prism", marker, "slide_features_prism", "prism_encoder.csv"),
-                tiles_dir          = os.path.join("data", "prism", marker, "features_virchow"),
+                slide_features_csv = os.path.join("data", encoder, marker, enc["slide_subdir"], enc["slide_csv"]),
+                slide_id_col       = "wsi_name",
+                tiles_dir          = os.path.join("data", encoder, marker, enc["tiles_subdir"]),
                 labels_csv         = out_csv_marker,
                 bag_keys           = ["X", "X_slide", "Y", "coords"],
                 model_mil          = mil,
-                in_shape           = (in_shape,),
+                in_shape           = (enc["in_shape"],),
                 lr                 = 1e-4,
                 epochs             = 100,
                 batch_size         = 4,
                 val_split          = 0.2,
                 device             = "cuda" if torch.cuda.is_available() else "cpu",
-                output_dir         = os.path.join("outputs", encoder, marker),
+                output_dir         = os.path.join("outputs", encoder, marker, mil),
                 seed               = 42,
             )
 
@@ -101,7 +97,7 @@ for marker in marker_list :
                     if epoch % 10 == 0:
                         torch.save(model.state_dict(), os.path.join(cfg["output_dir"], f"model_epoch{epoch:03d}.pth"))
 
-                msg = f"\nMeilleur modèle — epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
+                msg = f"\n{encoder}, {mil}, {marker}, meilleur modèle — epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
                 print(msg)
                 with open("output_logs.txt", "a") as f:
                     f.write(msg + "\n")

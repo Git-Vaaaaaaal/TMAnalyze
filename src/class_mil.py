@@ -32,6 +32,7 @@ class CSVMILDataset(torch.utils.data.Dataset):
         labels_csv: str = None,
         bag_keys: list = ["X", "X_slide", "Y", "coords"],
         patient_ids: list = None,
+        slide_id_col: str = "patient_id",
         dist_thr: float = 1.5,
         adj_with_dist: bool = False,
         norm_adj: bool = True,
@@ -44,6 +45,7 @@ class CSVMILDataset(torch.utils.data.Dataset):
         self.tiles_dir = tiles_dir
         self.labels_csv = labels_csv
         self.bag_keys = bag_keys
+        self.slide_id_col = slide_id_col
         self.dist_thr = dist_thr
         self.adj_with_dist = adj_with_dist
         self.norm_adj = norm_adj
@@ -67,10 +69,10 @@ class CSVMILDataset(torch.utils.data.Dataset):
         self.df_slides = None
         if slide_features_csv is not None:
             self.df_slides = pd.read_csv(slide_features_csv)
-            self.df_slides["patient_id"] = self.df_slides["patient_id"].astype(str).apply(
+            self.df_slides[slide_id_col] = self.df_slides[slide_id_col].astype(str).apply(
                 lambda x: os.path.splitext(x)[0]
             )
-            self.df_slides = self.df_slides.set_index("patient_id")
+            self.df_slides = self.df_slides.rename(columns={slide_id_col: "patient_id"}).set_index("patient_id")
 
         self.df_labels = None
         if labels_csv is not None:

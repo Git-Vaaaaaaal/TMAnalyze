@@ -216,54 +216,67 @@ class Processor:
         >>> processor.run_segmentation_job(segmentation_model=model, seg_mag=20)
         """
 
-        def get_ring(cnt):
-            """Approximation, formatage des coordonnées et fermeture du polygone."""
-            approx = cv2.approxPolyDP(cnt, epsilon, closed=True) if epsilon > 0 else cnt
-            coords = approx.reshape(-1, 2).tolist()
-            if coords[0] != coords[-1]: coords.append(coords[0])
-            return coords
-
         saveto = os.path.join(self.job_dir, 'geojson_contours')
         os.makedirs(saveto, exist_ok=True)
-        for wsi in self.wsis:
-            wsi_mask = TMAx.predict_mask(wsi)
-            binary = np.where(wsi_mask > 0, 255, 0).astype(np.uint8)
+
+        # Fix 2 — modèle chargé une seule fois avant la boucle
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        tmax_model = TMAx.core.load_model_from_hf("Vaaaal/TMAs", "unet_tgs_salt_resnet.pth", device)
+
+        for wsi in tqdm(self.wsis, desc="TMAx segmentation"):
+            filename = os.path.join(saveto, f"{wsi.name}.geojson")
+
+            # Fix 3 — TMAx retourne 0/255 (pas 0/1) après get_thumbnail → résolution thumbnail
+            raw_mask = TMAx.predict_mask(wsi)
+
+            # Fix 1 — scale thumbnail → full-slide
+            thumb_h, thumb_w = raw_mask.shape[:2]
+            full_w, full_h   = wsi.width, wsi.height
+            scale_x = full_w / thumb_w
+            scale_y = full_h / thumb_h
+
+            # 0/255 → 0/1 pour findContours
+            binary = (raw_mask > 0).astype(np.uint8)
             contours, hierarchy = cv2.findContours(binary, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-            
+
             features = []
-            min_area, epsilon = 100.0, 1.0
             if hierarchy is not None:
-                for i, (cnt, h) in enumerate(zip(contours, hierarchy[0])):
-                    # Ignorer les trous (h[3] != -1) et les zones trop petites
-                    if h[3] != -1 or cv2.contourArea(cnt) < min_area: 
+                hierarchy = hierarchy[0]
+                for i, (cnt, h) in enumerate(zip(contours, hierarchy)):
+                    if h[3] != -1:
+                        continue
+                    if cv2.contourArea(cnt) < 100:
                         continue
 
-                    rings = [get_ring(cnt)]
+                    ext_pts = cnt.reshape(-1, 2) * [scale_x, scale_y]
+                    ext_ring = ext_pts.tolist()
+                    if ext_ring[0] != ext_ring[-1]:
+                        ext_ring.append(ext_ring[0])
+                    rings = [ext_ring]
 
-                    # Traitement des trous
                     child = h[2]
                     while child != -1:
-                        if cv2.contourArea(contours[child]) >= min_area:
-                            rings.append(get_ring(contours[child]))
-                        child = hierarchy[0][child][0]
+                        if cv2.contourArea(contours[child]) >= 100:
+                            hole_pts = contours[child].reshape(-1, 2) * [scale_x, scale_y]
+                            hole_ring = hole_pts.tolist()
+                            if hole_ring[0] != hole_ring[-1]:
+                                hole_ring.append(hole_ring[0])
+                            rings.append(hole_ring)
+                        child = hierarchy[child][0]
 
                     features.append({
                         "type": "Feature",
-                        "properties": {"tissue_id": len(features) + 1},
+                        "properties": {"tissue_id": len(features) + 1, "value": 1},
                         "geometry": {"type": "Polygon", "coordinates": rings},
                     })
 
-            # Enregistrement
-            filename = os.path.join(saveto, getattr(wsi, 'name', f"wsi_{id(wsi)}") + ".geojson")
-            with open(filename, 'w') as f:
-                json.dump({
-                    "type": "FeatureCollection",
-                    "name": filename,
-                    "features": features
-                }, f)
-            wsi.tissue_seg_path = filename
+            geojson = {"type": "FeatureCollection", "name": wsi.name, "features": features}
+            with open(filename, "w") as f:
+                json.dump(geojson, f)
 
-        # Return the directory where the contours are saved
+            wsi.tissue_seg_path = filename
+            logger.info(f"[{wsi.name}] {len(features)} région(s) → {filename}")
+
         return saveto
 
     def run_patching_job(

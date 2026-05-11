@@ -255,76 +255,6 @@ class Processor:
                     "name": filename,
                     "features": features
                 }, f)
-            
-        """ sig = signature(self.run_segmentation_job)
-        local_attrs = {k: v for k, v in locals().items() if k in sig.parameters}
-        self.save_config(
-            saveto=os.path.join(self.job_dir, '_config_segmentation.json'),
-            local_attrs=local_attrs,
-            ignore = ['segmentation_model', 'loop', 'valid_slides', 'wsis']
-        )
-
-        self.loop = tqdm(self.wsis, desc='Segmenting tissue', total = len(self.wsis))
-        for wsi in self.loop:   
-            # Check if contour already exists
-            if os.path.exists(os.path.join(saveto, f'{wsi.name}.geojson')) and not is_locked(os.path.join(saveto, f'{wsi.name}.geojson')):
-                self.loop.set_postfix_str(f'{wsi.name} already segmented. Skipping...')
-                update_log(os.path.join(self.job_dir, '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', 'Tissue segmented.')
-                continue
-
-            # Check if another process has claimed this slide
-            if is_locked(os.path.join(saveto, f'{wsi.name}.jpg')):
-                self.loop.set_postfix_str(f'{wsi.name} is locked. Skipping...')
-                continue
-
-            try:
-                self.loop.set_postfix_str(f'Segmenting {wsi}')
-                create_lock(os.path.join(saveto, f'{wsi.name}.jpg'))
-                update_log(os.path.join(self.job_dir, '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', 'LOCKED. Segmenting tissue...')
-
-                # call a function from WSI object to do the work
-                gdf_saveto = wsi.segment_tissue(
-                    segmentation_model=segmentation_model,
-                    target_mag=seg_mag,
-                    holes_are_tissue=holes_are_tissue,
-                    job_dir=self.job_dir,
-                    batch_size=batch_size,
-                    device=device
-                )
-
-                # additionally remove artifacts for better segmentation.
-                if artifact_remover_model is not None:
-                    gdf_saveto = wsi.segment_tissue(
-                        segmentation_model=artifact_remover_model,
-                        target_mag=artifact_remover_model.target_mag,
-                        holes_are_tissue=False,
-                        job_dir=self.job_dir
-                    )
-
-                remove_lock(os.path.join(saveto, f'{wsi.name}.jpg'))
-
-                gdf = gpd.read_file(gdf_saveto, rows=1)
-                if gdf.empty:
-                    update_log(os.path.join(self.job_dir, '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', 'Segmentation returned empty GeoDataFrame.')
-                    self.loop.set_postfix_str(f'Empty GeoDataFrame for {wsi.name}.')
-                else:
-                    update_log(os.path.join(self.job_dir,  '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', 'Tissue segmented.')
-                
-                # Release WSI resources to prevent memory accumulation
-                wsi.release()
-            except Exception as e:
-                if isinstance(e, KeyboardInterrupt):
-                    remove_lock(os.path.join(saveto, f'{wsi.name}.jpg'))
-                # Release WSI resources even on error to prevent memory leaks
-                try:
-                    wsi.release()
-                except Exception:
-                    pass
-                if self.skip_errors:
-                    update_log(os.path.join(self.job_dir, '_logs_segmentation.txt'), f'{wsi.name}{wsi.ext}', f'ERROR: {e}')
-                    continue
-                else:
-                    raise e """
                 
         # Return the directory where the contours are saved
         return saveto
@@ -342,19 +272,11 @@ class Processor:
 
         self.target_magnification = target_magnification
 
-        """ if visualize:
-            save_patch_viz = os.path.join(saveto, 'visualization')
-            os.makedirs(os.path.join(self.job_dir, save_patch_viz), exist_ok=True) """
 
         os.makedirs(os.path.join(self.job_dir, saveto, 'patches'), exist_ok=True)
 
         sig = signature(self.run_patching_job)
         local_attrs = {k: v for k, v in locals().items() if k in sig.parameters}
-        """ self.save_config(
-            saveto=os.path.join(self.job_dir, saveto, '_config_coords.json'),
-            local_attrs=local_attrs,
-            ignore=['segmentation_model', 'loop', 'valid_slides', 'wsis']
-        ) """
 
         self.loop = tqdm(self.wsis, desc=f'Saving tissue coordinates to {saveto}', total=len(self.wsis))
         for wsi in self.loop:
@@ -398,16 +320,7 @@ class Processor:
 
                 pd.DataFrame(coords, columns=['x', 'y']).to_csv(csv_path, index=False)
 
-                #SUPPRIMER FEATURES
-                """ if visualize:
-                    wsi.visualize_coords(
-                        coords_path=csv_path,
-                        save_patch_viz=os.path.join(self.job_dir, save_patch_viz),
-                    )
 
-                remove_lock(csv_path)
-                update_log(os.path.join(self.job_dir, saveto, '_logs_coords.txt'), f'{wsi.name}{wsi.ext}', 'Coords generated')
-                """
                 wsi.release() 
 
             except Exception as e:
@@ -417,12 +330,7 @@ class Processor:
                     wsi.release()
                 except Exception:
                     pass
-                """ if self.skip_errors:
-                    update_log(os.path.join(self.job_dir, saveto, '_logs_coords.txt'), f'{wsi.name}{wsi.ext}', f'ERROR: {e}')
-                    continue
-                else:
-                    raise e
- """
+
         return os.path.join(self.job_dir, saveto)
 
     @deprecated
@@ -460,11 +368,6 @@ class Processor:
 
         sig = signature(self.run_patch_feature_extraction_job)
         local_attrs = {k: v for k, v in locals().items() if k in sig.parameters}
-        """ self.save_config(
-            saveto=os.path.join(self.job_dir, coords_dir, f'_config_feats_{patch_encoder.enc_name}.json'),
-            local_attrs=local_attrs,
-            ignore=['patch_encoder', 'loop', 'valid_slides', 'wsis']
-        ) """
 
         #log_fp = os.path.join(self.job_dir, coords_dir, f'_logs_feats_{patch_encoder.enc_name}.txt')
         self.loop = tqdm(self.wsis, desc=f'Extracting patch features from coords in {coords_dir}', total=len(self.wsis))
