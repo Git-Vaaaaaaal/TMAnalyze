@@ -217,7 +217,9 @@ class Processor:
         """
 
         saveto = os.path.join(self.job_dir, 'geojson_contours')
+        thumbnails_dir = os.path.join(self.job_dir, 'thumbnails')
         os.makedirs(saveto, exist_ok=True)
+        os.makedirs(thumbnails_dir, exist_ok=True)
 
         # Fix 2 — modèle chargé une seule fois avant la boucle
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -235,8 +237,8 @@ class Processor:
             scale_x = full_w / thumb_w
             scale_y = full_h / thumb_h
 
-            # 0/255 → 0/1 pour findContours
-            binary = (raw_mask > 0).astype(np.uint8)
+            # TMAx retourne 255=fond, 0=tissu → on inverse
+            binary = (raw_mask == 0).astype(np.uint8)
             contours, hierarchy = cv2.findContours(binary, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
             features = []
@@ -275,6 +277,28 @@ class Processor:
                 json.dump(geojson, f)
 
             wsi.tissue_seg_path = filename
+            wsi.gdf_contours = gpd.read_file(filename) if features else None
+
+            # Thumbnail avec overlay des contours tissue
+            max_dim = 1000
+            if wsi.width >= wsi.height:
+                th_w, th_h = max_dim, int(max_dim * wsi.height / wsi.width)
+            else:
+                th_h, th_w = max_dim, int(max_dim * wsi.width / wsi.height)
+            thumbnail = np.array(wsi.get_thumbnail((th_w, th_h)))
+            scale_thumb_x = th_w / wsi.width
+            scale_thumb_y = th_h / wsi.height
+            for feat in features:
+                for ring in feat["geometry"]["coordinates"]:
+                    pts = np.array(ring, dtype=np.float32)
+                    pts[:, 0] *= scale_thumb_x
+                    pts[:, 1] *= scale_thumb_y
+                    cv2.polylines(thumbnail, [pts.astype(np.int32)], isClosed=True, color=(0, 255, 0), thickness=2)
+            cv2.imwrite(
+                os.path.join(thumbnails_dir, f'{wsi.name}.jpg'),
+                cv2.cvtColor(thumbnail, cv2.COLOR_RGB2BGR)
+            )
+
             logger.info(f"[{wsi.name}] {len(features)} région(s) → {filename}")
 
         return saveto
@@ -319,7 +343,39 @@ class Processor:
                 df_coords.to_csv(csv_path, index=False)
 
                 elapsed = time.time() - start
-                
+
+                # Thumbnail avec overlay des patchs
+                thumb_path = os.path.join(self.job_dir, 'thumbnails', f'{wsi.name}.jpg')
+                if os.path.exists(thumb_path):
+                    from PIL import Image as _PIL
+                    base = np.array(_PIL.open(thumb_path).convert('RGB'))
+                else:
+                    max_dim = 1000
+                    if wsi.width >= wsi.height:
+                        th_w, th_h = max_dim, int(max_dim * wsi.height / wsi.width)
+                    else:
+                        th_h, th_w = max_dim, int(max_dim * wsi.width / wsi.height)
+                    base = np.array(wsi.get_thumbnail((th_w, th_h)).convert('RGB'))
+                    os.makedirs(os.path.join(self.job_dir, 'thumbnails'), exist_ok=True)
+
+                th_h, th_w = base.shape[:2]
+                scale = th_w / wsi.width
+                patch_size_l0 = int(patch_size * wsi.mag / target_magnification)
+                ps_thumb = max(1, int(patch_size_l0 * scale))
+
+                vis = base.copy()
+                for x, y in df_coords[['x', 'y']].values:
+                    tx, ty = int(x * scale), int(y * scale)
+                    x2 = min(tx + ps_thumb, th_w - 1)
+                    y2 = min(ty + ps_thumb, th_h - 1)
+                    cv2.rectangle(vis, (tx, ty), (x2, y2), (0, 0, 255), 1)
+
+                cv2.imwrite(
+                    os.path.join(self.job_dir, 'thumbnails', f'{wsi.name}_patches.jpg'),
+                    cv2.cvtColor(vis, cv2.COLOR_RGB2BGR)
+                )
+                logger.info(f"[{wsi.name}] {len(df_coords)} patchs → {csv_path}")
+
             except:
                 try:
                     wsi.release()

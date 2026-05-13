@@ -12,11 +12,13 @@ import TMAx
 import cv2
 import json
 
-from trident import load_wsi, WSIReaderType
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from class_wsi import WSI
+
+from trident import WSIReaderType
 from trident.IO import create_lock, remove_lock, is_locked, update_log, collect_valid_slides
 from trident.Maintenance import deprecated
 from trident.wsi_objects.WSIFactory import OPENSLIDE_EXTENSIONS, PIL_EXTENSIONS, SDPC_EXTENSIONS
-
 
 class Processor:
 
@@ -218,27 +220,45 @@ class Processor:
             return coords
 
         saveto = os.path.join(self.job_dir, 'geojson_contours')
+        thumbnails_dir = os.path.join(self.job_dir, 'thumbnails')
+        contours_dir = os.path.join(self.job_dir, 'contours')
         os.makedirs(saveto, exist_ok=True)
+        os.makedirs(thumbnails_dir, exist_ok=True)
+        os.makedirs(contours_dir, exist_ok=True)
+
         for wsi in self.wsis:
             wsi_mask = TMAx.predict_mask(wsi)
-            binary = np.where(wsi_mask == 0, 255, 0).astype(np.uint8)
+            binary = (wsi_mask > 0).astype(np.uint8) * 255
             contours, hierarchy = cv2.findContours(binary, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-            
+
+            # Thumbnail
+            max_dim = 1000
+            if wsi.width >= wsi.height:
+                thumb_w, thumb_h = max_dim, int(max_dim * wsi.height / wsi.width)
+            else:
+                thumb_h, thumb_w = max_dim, int(max_dim * wsi.width / wsi.height)
+            thumbnail = wsi.get_thumbnail((thumb_w, thumb_h))
+            thumb_path = os.path.join(thumbnails_dir, f'{wsi.name}.jpg')
+            thumbnail.save(thumb_path)
+
             features = []
+            tissue_contours = []
             min_area, epsilon = 100.0, 1.0
             if hierarchy is not None:
                 for i, (cnt, h) in enumerate(zip(contours, hierarchy[0])):
                     # Ignorer les trous (h[3] != -1) et les zones trop petites
-                    if h[3] != -1 or cv2.contourArea(cnt) < min_area: 
+                    if h[3] != -1 or cv2.contourArea(cnt) < min_area:
                         continue
 
                     rings = [get_ring(cnt)]
+                    tissue_contours.append(cnt)
 
                     # Traitement des trous
                     child = h[2]
                     while child != -1:
                         if cv2.contourArea(contours[child]) >= min_area:
                             rings.append(get_ring(contours[child]))
+                            tissue_contours.append(contours[child])
                         child = hierarchy[0][child][0]
 
                     features.append({
@@ -247,15 +267,23 @@ class Processor:
                         "geometry": {"type": "Polygon", "coordinates": rings},
                     })
 
-            # Enregistrement
+            # Enregistrement GeoJSON
             filename = getattr(wsi, 'name', f"wsi_{id(wsi)}") + ".geojson"
-            with open(filename, 'w') as f:
+            geojson_path = os.path.join(saveto, filename)
+            with open(geojson_path, 'w') as f:
                 json.dump({
                     "type": "FeatureCollection",
                     "name": filename,
                     "features": features
                 }, f)
-                
+
+            # Overlay des contours sur le thumbnail
+            scale = thumb_w / binary.shape[1]
+            annotated = np.array(thumbnail)
+            scaled = [np.round(cnt * scale).astype(np.int32) for cnt in tissue_contours]
+            cv2.drawContours(annotated, scaled, -1, color=(0, 255, 0), thickness=2)
+            cv2.imwrite(os.path.join(contours_dir, f'{wsi.name}.jpg'), cv2.cvtColor(annotated, cv2.COLOR_RGB2BGR))
+
         # Return the directory where the contours are saved
         return saveto
 

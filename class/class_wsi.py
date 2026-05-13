@@ -461,7 +461,7 @@ class WSI:
             thumbnail.save(thumbnail_saveto)
 
             # Save geopandas contours
-            gdf_saveto = os.path.join(job_dir, 'contours_geojson', f'{self.name}.geojson')
+            gdf_saveto = os.path.join(job_dir, 'geojson_contours', f'{self.name}.geojson')
             os.makedirs(os.path.dirname(gdf_saveto), exist_ok=True)
             gdf_contours.set_crs("EPSG:3857", inplace=True)  # used to silent warning // Web Mercator
             gdf_contours.to_file(gdf_saveto, driver="GeoJSON")
