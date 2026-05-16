@@ -10,3 +10,111 @@ prism, transmil, BCL2, meilleur modèle — epoch 31, val AUC: 0.7598
 prism, abmil, BCL2, meilleur modèle — epoch 44, val AUC: 0.6086
 
 prism, dsmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.6815
+
+prism, transmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.6572
+
+prism, abmil, BCL2, meilleur modèle — epoch 44, val AUC: 0.6046
+
+prism, dsmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.6815
+
+titan, transmil, BCL2, meilleur modèle — epoch 36, val AUC: 0.7355
+
+titan, abmil, BCL2, meilleur modèle — epoch 81, val AUC: 0.5655
+
+titan, dsmil, BCL2, meilleur modèle — epoch 46, val AUC: 0.6613
+
+feather, transmil, BCL2, meilleur modèle — epoch 30, val AUC: 0.7395
+
+feather, abmil, BCL2, meilleur modèle — epoch 81, val AUC: 0.5655
+
+feather, dsmil, BCL2, meilleur modèle — epoch 46, val AUC: 0.6613
+
+prism, transmil, BCL6, meilleur modèle — epoch 52, val AUC: 0.6349
+
+prism, abmil, BCL6, meilleur modèle — epoch 1, val AUC: 0.6614
+
+prism, dsmil, BCL6, meilleur modèle — epoch 18, val AUC: 0.6693
+
+titan, transmil, BCL6, meilleur modèle — epoch 77, val AUC: 0.7725
+
+titan, abmil, BCL6, meilleur modèle — epoch 17, val AUC: 0.7143
+
+titan, dsmil, BCL6, meilleur modèle — epoch 35, val AUC: 0.7487
+
+feather, transmil, BCL6, meilleur modèle — epoch 58, val AUC: 0.7063
+
+feather, abmil, BCL6, meilleur modèle — epoch 17, val AUC: 0.7143
+
+feather, dsmil, BCL6, meilleur modèle — epoch 35, val AUC: 0.7487
+
+prism, transmil, CD10, meilleur modèle — epoch 58, val AUC: 0.6135
+
+prism, abmil, CD10, meilleur modèle — epoch 18, val AUC: 0.6250
+
+prism, dsmil, CD10, meilleur modèle — epoch 1, val AUC: 0.5724
+
+titan, transmil, CD10, meilleur modèle — epoch 78, val AUC: 0.6711
+
+titan, abmil, CD10, meilleur modèle — epoch 39, val AUC: 0.5691
+
+titan, dsmil, CD10, meilleur modèle — epoch 1, val AUC: 0.5691
+
+feather, transmil, CD10, meilleur modèle — epoch 1, val AUC: 0.6299
+
+feather, abmil, CD10, meilleur modèle — epoch 39, val AUC: 0.5691
+
+feather, dsmil, CD10, meilleur modèle — epoch 1, val AUC: 0.5691
+
+prism, transmil, HE, meilleur modèle — epoch 35, val AUC: 0.5882
+
+prism, abmil, HE, meilleur modèle — epoch 1, val AUC: 0.4749
+
+prism, dsmil, HE, meilleur modèle — epoch 20, val AUC: 0.4778
+
+titan, transmil, HE, meilleur modèle — epoch 5, val AUC: 0.6083
+
+titan, abmil, HE, meilleur modèle — epoch 1, val AUC: 0.5438
+
+titan, dsmil, HE, meilleur modèle — epoch 1, val AUC: 0.4720
+
+feather, transmil, HE, meilleur modèle — epoch 5, val AUC: 0.6069
+
+feather, abmil, HE, meilleur modèle — epoch 1, val AUC: 0.5438
+
+feather, dsmil, HE, meilleur modèle — epoch 1, val AUC: 0.4720
+
+prism, transmil, MUM1, meilleur modèle — epoch 13, val AUC: 0.6660
+
+prism, abmil, MUM1, meilleur modèle — epoch 1, val AUC: 0.6053
+
+prism, dsmil, MUM1, meilleur modèle — epoch 34, val AUC: 0.7935
+
+titan, transmil, MUM1, meilleur modèle — epoch 23, val AUC: 0.7186
+
+titan, abmil, MUM1, meilleur modèle — epoch 2, val AUC: 0.6134
+
+titan, dsmil, MUM1, meilleur modèle — epoch 64, val AUC: 0.5769
+
+feather, transmil, MUM1, meilleur modèle — epoch 14, val AUC: 0.7328
+
+feather, abmil, MUM1, meilleur modèle — epoch 2, val AUC: 0.6134
+
+feather, dsmil, MUM1, meilleur modèle — epoch 64, val AUC: 0.5769
+
+prism, transmil, MYC, meilleur modèle — epoch 1, val AUC: 0.5829
+
+prism, abmil, MYC, meilleur modèle — epoch 58, val AUC: 0.5692
+
+prism, dsmil, MYC, meilleur modèle — epoch 15, val AUC: 0.7145
+
+titan, transmil, MYC, meilleur modèle — epoch 92, val AUC: 0.7179
+
+titan, abmil, MYC, meilleur modèle — epoch 46, val AUC: 0.5538
+
+titan, dsmil, MYC, meilleur modèle — epoch 26, val AUC: 0.6359
+
+feather, transmil, MYC, meilleur modèle — epoch 93, val AUC: 0.6821
+
+feather, abmil, MYC, meilleur modèle — epoch 46, val AUC: 0.5538
+
+feather, dsmil, MYC, meilleur modèle — epoch 26, val AUC: 0.6359
