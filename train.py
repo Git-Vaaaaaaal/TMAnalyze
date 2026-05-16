@@ -42,8 +42,7 @@ encoder_list = ["prism", "titan", "feather"]
 
 mil_list = ["transmil", "abmil", "dsmil"]
 
-status_list = ["ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
-                "OS", "PFS"]
+status_list = ["ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group"]
 
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
