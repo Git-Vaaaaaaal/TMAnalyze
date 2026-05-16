@@ -20,11 +20,14 @@ dropped_column = ["patient_id", "old_patient_id", "stain", "Age", "Status", "ECO
 """
 
 
-def cleaning_csv(df_path, marker, encoder):
+def cleaning_csv(df_path, marker, encoder, element):
     df_label = pd.read_csv(df_path)
     df_label = df_label[df_label["stain"] == marker]
-    dropped_column = ["old_patient_id", "stain", "Age", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
+    dropped_column = ["old_patient_id", "stain", "Age"]
+    status = ["Status", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
                 "OS", "PFS"]
+    status = status.remove(element)
+    dropped_column = dropped_column + status
     df_label = df_label.drop(columns=dropped_column)
     out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")
     df_label.to_csv(out_csv_marker, index=False)
@@ -39,6 +42,9 @@ encoder_list = ["prism", "titan", "feather"]
 
 mil_list = ["transmil", "abmil", "dsmil"]
 
+status_list = ["ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
+                "OS", "PFS"]
+
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
     "titan":   dict(in_shape=768,  tiles_subdir="features_conch_v15", slide_subdir="slide_features_titan",  slide_csv="titan_encoder.csv"),
@@ -48,72 +54,75 @@ ENCODER_CFG = {
 for marker in marker_list :
     for encoder in encoder_list:
         for mil in mil_list :
-            enc = ENCODER_CFG[encoder]
-            out_csv_marker = cleaning_csv(dataframe_id, marker, encoder)
+            for status in status_list:
+                enc = ENCODER_CFG[encoder]
+                out_csv_marker = cleaning_csv(dataframe_id, marker, encoder, status)
 
-            CFG = dict(
-                slide_features_csv = os.path.join("data", encoder, marker, enc["slide_subdir"], enc["slide_csv"]),
-                slide_id_col       = "wsi_name",
-                tiles_dir          = os.path.join("data", encoder, marker, enc["tiles_subdir"]),
-                labels_csv         = out_csv_marker,
-                bag_keys           = ["X", "X_slide", "Y", "coords"],
-                model_mil          = mil,
-                in_shape           = (enc["in_shape"],),
-                lr                 = 1e-4,
-                epochs             = 100,
-                batch_size         = 4,
-                val_split          = 0.2,
-                device             = "cuda" if torch.cuda.is_available() else "cpu",
-                output_dir         = os.path.join("outputs", encoder, marker, mil),
-                seed               = 42,
-            )
+                os.makedirs(os.path.join("outputs_" + str(status)), exist_ok=True)
 
-
-            def train(cfg, model, optimizer, scheduler, train_loader, val_loader):
-                history      = {k: [] for k in ["train_loss", "val_loss", "train_acc", "val_acc", "train_auc", "val_auc", "train_ap", "val_ap"]}
-                best_val_auc = -1.0
-                best_epoch   = 0
-
-                for epoch in range(1, cfg["epochs"] + 1):
-                    train_metrics, _ = run_epoch(model, train_loader, optimizer, cfg["device"], train=True)
-                    val_metrics, _   = run_epoch(model, val_loader,   optimizer, cfg["device"], train=False)
-                    scheduler.step()
-
-                    for phase, m in [("train", train_metrics), ("val", val_metrics)]:
-                        for key in ["loss", "acc", "auc", "ap"]:
-                            history[f"{phase}_{key}"].append(m[key])
-
-                    print(
-                        f"Epoch {epoch:03d}/{cfg['epochs']} | "
-                        f"Train — loss: {train_metrics['loss']:.4f}  acc: {train_metrics['acc']:.3f}  AUC: {train_metrics['auc']:.3f} | "
-                        f"Val   — loss: {val_metrics['loss']:.4f}  acc: {val_metrics['acc']:.3f}  AUC: {val_metrics['auc']:.3f}"
-                    )
-
-                    if val_metrics["auc"] > best_val_auc:
-                        best_val_auc = val_metrics["auc"]
-                        best_epoch   = epoch
-                        torch.save(model.state_dict(), os.path.join(cfg["output_dir"], "best_model.pth"))
-
-                    if epoch % 10 == 0:
-                        torch.save(model.state_dict(), os.path.join(cfg["output_dir"], f"model_epoch{epoch:03d}.pth"))
-
-                msg = f"\n{encoder}, {mil}, {marker}, meilleur modèle — epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
-                print(msg)
-                with open("output_logs.txt", "a") as f:
-                    f.write(msg + "\n")
-                return history, best_epoch, best_val_auc
+                CFG = dict(
+                    slide_features_csv = os.path.join("data", encoder, marker, enc["slide_subdir"], enc["slide_csv"]),
+                    slide_id_col       = "wsi_name",
+                    tiles_dir          = os.path.join("data", encoder, marker, enc["tiles_subdir"]),
+                    labels_csv         = out_csv_marker,
+                    bag_keys           = ["X", "X_slide", "Y", "coords"],
+                    model_mil          = mil,
+                    in_shape           = (enc["in_shape"],),
+                    lr                 = 1e-4,
+                    epochs             = 100,
+                    batch_size         = 4,
+                    val_split          = 0.2,
+                    device             = "cuda" if torch.cuda.is_available() else "cpu",
+                    output_dir         = os.path.join("outputs_" + str(status), encoder, marker, mil),
+                    seed               = 42,
+                )
 
 
+                def train(cfg, model, optimizer, scheduler, train_loader, val_loader):
+                    history      = {k: [] for k in ["train_loss", "val_loss", "train_acc", "val_acc", "train_auc", "val_auc", "train_ap", "val_ap"]}
+                    best_val_auc = -1.0
+                    best_epoch   = 0
+
+                    for epoch in range(1, cfg["epochs"] + 1):
+                        train_metrics, _ = run_epoch(model, train_loader, optimizer, cfg["device"], train=True)
+                        val_metrics, _   = run_epoch(model, val_loader,   optimizer, cfg["device"], train=False)
+                        scheduler.step()
+
+                        for phase, m in [("train", train_metrics), ("val", val_metrics)]:
+                            for key in ["loss", "acc", "auc", "ap"]:
+                                history[f"{phase}_{key}"].append(m[key])
+
+                        print(
+                            f"Epoch {epoch:03d}/{cfg['epochs']} | "
+                            f"Train — loss: {train_metrics['loss']:.4f}  acc: {train_metrics['acc']:.3f}  AUC: {train_metrics['auc']:.3f} | "
+                            f"Val   — loss: {val_metrics['loss']:.4f}  acc: {val_metrics['acc']:.3f}  AUC: {val_metrics['auc']:.3f}"
+                        )
+
+                        if val_metrics["auc"] > best_val_auc:
+                            best_val_auc = val_metrics["auc"]
+                            best_epoch   = epoch
+                            torch.save(model.state_dict(), os.path.join(cfg["output_dir"], "best_model.pth"))
+
+                        if epoch % 10 == 0:
+                            torch.save(model.state_dict(), os.path.join(cfg["output_dir"], f"model_epoch{epoch:03d}.pth"))
+
+                    msg = f"\n{encoder}, {mil}, {marker}, meilleur modèle — epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
+                    print(msg)
+                    with open("output_logs.txt", "a") as f:
+                        f.write(msg + "\n")
+                    return history, best_epoch, best_val_auc
 
 
-            os.makedirs(CFG["output_dir"], exist_ok=True)
-            torch.manual_seed(CFG["seed"])
 
-            train_loader, val_loader          = build_dataloaders(CFG)
-            model, optimizer, scheduler       = build_model(CFG)
-            history, best_epoch, best_val_auc = train(CFG, model, optimizer, scheduler, train_loader, val_loader)
-            final_tracker                     = evaluate(CFG, model, val_loader, optimizer)
 
-            plot_dashboard(history, best_epoch, best_val_auc, final_tracker, CFG["output_dir"])
-            generate_heatmaps(CFG, model)
+                os.makedirs(CFG["output_dir"], exist_ok=True)
+                torch.manual_seed(CFG["seed"])
+
+                train_loader, val_loader          = build_dataloaders(CFG)
+                model, optimizer, scheduler       = build_model(CFG)
+                history, best_epoch, best_val_auc = train(CFG, model, optimizer, scheduler, train_loader, val_loader)
+                final_tracker                     = evaluate(CFG, model, val_loader, optimizer)
+
+                plot_dashboard(history, best_epoch, best_val_auc, final_tracker, CFG["output_dir"])
+                generate_heatmaps(CFG, model)
 
