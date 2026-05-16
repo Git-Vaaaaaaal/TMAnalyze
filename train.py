@@ -105,7 +105,7 @@ for marker in marker_list :
                         if epoch % 10 == 0:
                             torch.save(model.state_dict(), os.path.join(cfg["output_dir"], f"model_epoch{epoch:03d}.pth"))
 
-                    msg = f"\n{encoder}, {mil}, {marker}, meilleur modèle — epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
+                    msg = f"\n{status}, {encoder}, {mil}, {marker}, meilleur modèle — epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
                     print(msg)
                     with open("output_logs.txt", "a") as f:
                         f.write(msg + "\n")
