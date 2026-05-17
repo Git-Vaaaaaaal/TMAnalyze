@@ -26,7 +26,7 @@ def cleaning_csv(df_path, marker, encoder, element):
     dropped_column = ["old_patient_id", "stain", "Age"]
     status = ["Status", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
                 "OS", "PFS"]
-    status = status.remove(element)
+    status.remove(element)
     dropped_column = dropped_column + status
     df_label = df_label.drop(columns=dropped_column)
     out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")
