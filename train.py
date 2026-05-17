@@ -23,13 +23,7 @@ dropped_column = ["patient_id", "old_patient_id", "stain", "Age", "Status", "ECO
 def cleaning_csv(df_path, marker, encoder, element):
     df_label = pd.read_csv(df_path)
     df_label = df_label[df_label["stain"] == marker]
-    dropped_column = ["old_patient_id", "stain", "Age"]
-    status = ["Status", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
-                "OS", "PFS"]
-    status.remove(element)
-    dropped_column = dropped_column + status
-    df_label = df_label.drop(columns=dropped_column)
-    df_label = df_label.rename(columns={element: "Status"})
+    df_label = df_label[["patient_id", element]].rename(columns={element: "Status"})
     out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")
     df_label.to_csv(out_csv_marker, index=False)
     return out_csv_marker
@@ -125,4 +119,6 @@ for marker in marker_list :
 
                 plot_dashboard(history, best_epoch, best_val_auc, final_tracker, CFG["output_dir"])
                 generate_heatmaps(CFG, model)
+
+
 
