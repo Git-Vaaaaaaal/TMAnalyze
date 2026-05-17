@@ -24,6 +24,9 @@ def cleaning_csv(df_path, marker, encoder, element):
     df_label = pd.read_csv(df_path)
     df_label = df_label[df_label["stain"] == marker]
     df_label = df_label[["patient_id", element]].rename(columns={element: "Status"})
+    unique_vals = set(df_label["Status"].dropna().unique())
+    if not unique_vals.issubset({0, 1, 0.0, 1.0}):
+        df_label["Status"] = (df_label["Status"] > 0).astype(int)
     out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")
     df_label.to_csv(out_csv_marker, index=False)
     return out_csv_marker
