@@ -29,6 +29,7 @@ def cleaning_csv(df_path, marker, encoder, element):
     status.remove(element)
     dropped_column = dropped_column + status
     df_label = df_label.drop(columns=dropped_column)
+    df_label = df_label.rename(columns={element: "Status"})
     out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")
     df_label.to_csv(out_csv_marker, index=False)
     return out_csv_marker
