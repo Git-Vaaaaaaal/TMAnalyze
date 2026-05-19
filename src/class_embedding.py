@@ -410,7 +410,7 @@ class Processor:
         patch_size: int,
         target_mag: int,
         device: str,
-        batch_limit: int = 64,
+        batch_limit: int = 128,
     ) -> str:
 
         save_dir = os.path.join(self.job_dir, f'features_{patch_encoder.enc_name}')

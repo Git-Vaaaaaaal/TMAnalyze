@@ -39,7 +39,6 @@ encoder_list = ["prism", "titan", "feather"]
 mil_list = ["transmil", "abmil", "dsmil"]
 
 status_list = ["ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group"]
-binary_list = ["status", "LDH"]
 
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
@@ -54,10 +53,8 @@ for marker in marker_list :
                 enc = ENCODER_CFG[encoder]
                 out_csv_marker = cleaning_csv(dataframe_id, marker, encoder, status)
 
-                if status in binary_list :
-                    type_class = "binary"
-                else : 
-                    type_class = "multi_class"
+                n_classes  = int(pd.read_csv(out_csv_marker)["Status"].nunique())
+                type_class = "binary" if n_classes == 2 else "multi_class"
 
                 os.makedirs(os.path.join("outputs_" + str(status)), exist_ok=True)
 
@@ -76,7 +73,8 @@ for marker in marker_list :
                     device             = "cuda" if torch.cuda.is_available() else "cpu",
                     output_dir         = os.path.join("outputs_" + str(status), encoder, marker, mil),
                     seed               = 42,
-                    type_class         = type_class, # "binary" or "multi_class"
+                    type_class         = type_class,
+                    n_classes          = n_classes,
                 )
 
 

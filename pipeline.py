@@ -14,7 +14,7 @@ list_slide_encoder = ["prism", "feather", "titan"]
 
 for marker in list_marker :
     for slide_encoder in list_slide_encoder :
-        path = os.path.join("data", f"{slide_encoder}")
+        path = os.path.join("data_64", f"{slide_encoder}")
         #Partie 1 : Embeddings
         job_dir = os.path.join(path, f"{marker}")
         wsi_source = os.path.join(path, f"{marker}", "wsi_source")
@@ -28,7 +28,7 @@ for marker in list_marker :
         search_nested = False
 
         magnification = 20.0
-        patch_size = 16
+        patch_size = 64
 
         GPU = 0
         device = f'cuda:{GPU}' if torch.cuda.is_available() else 'cpu'

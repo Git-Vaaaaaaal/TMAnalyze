@@ -71,39 +71,40 @@ def build_dataloaders(cfg):
     return train_loader, val_loader
 
 
+def _replace_head(model, mil_name, n_classes):
+    """Replace the 1-output classifier with n_classes outputs for multi-class."""
+    if mil_name == "abmil":
+        in_f = model.classifier.module.in_features
+        model.classifier = torch.nn.Linear(in_f, n_classes)
+    elif mil_name == "transmil":
+        in_f = model.classifier.in_features
+        model.classifier = torch.nn.Linear(in_f, n_classes)
+    elif mil_name == "dsmil":
+        in_f = model.bag_classifier.in_features
+        model.bag_classifier  = torch.nn.Linear(in_f, n_classes)
+        model.inst_classifier = torch.nn.Linear(in_f, n_classes)
+    return model
+
+
 def build_model(cfg):
-    if cfg["type_class"] == "binary" :
-        if cfg["model_mil"] == "transmil":
-            model     = TransMIL(in_shape=cfg["in_shape"], criterion=torch.nn.BCEWithLogitsLoss())
-            optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"])
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg["epochs"])
-            return model.to(cfg["device"]), optimizer, scheduler
-        elif cfg["model_mil"] == "abmil":
-            model     = ABMIL(in_shape=cfg["in_shape"], criterion=torch.nn.BCEWithLogitsLoss())
-            optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"])
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg["epochs"])
-            return model.to(cfg["device"]), optimizer, scheduler
-        elif cfg["model_mil"] == "dsmil":
-            model     = DSMIL(in_shape=cfg["in_shape"], criterion=torch.nn.BCEWithLogitsLoss())
-            optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"])
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg["epochs"])
-            return model.to(cfg["device"]), optimizer, scheduler
-    if cfg["type_class"] == "multi_class" :
-        if cfg["model_mil"] == "transmil":
-            model     = TransMIL(in_shape=cfg["in_shape"], criterion=torch.nn.CrossEntropyLoss())
-            optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"])
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg["epochs"])
-            return model.to(cfg["device"]), optimizer, scheduler
-        elif cfg["model_mil"] == "abmil":
-            model     = ABMIL(in_shape=cfg["in_shape"], criterion=torch.nn.CrossEntropyLoss())
-            optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"])
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg["epochs"])
-            return model.to(cfg["device"]), optimizer, scheduler
-        elif cfg["model_mil"] == "dsmil":
-            model     = DSMIL(in_shape=cfg["in_shape"], criterion=torch.nn.CrossEntropyLoss())
-            optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"])
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg["epochs"])
-            return model.to(cfg["device"]), optimizer, scheduler
+    is_multi  = cfg["type_class"] == "multi_class"
+    n_classes = cfg.get("n_classes", 2)
+    criterion = torch.nn.CrossEntropyLoss() if is_multi else torch.nn.BCEWithLogitsLoss()
+    mil       = cfg["model_mil"]
+
+    model_cls = {"transmil": TransMIL, "abmil": ABMIL, "dsmil": DSMIL}[mil]
+    model = model_cls(in_shape=cfg["in_shape"], criterion=criterion)
+
+    if is_multi:
+        # Initialize lazy layers with dummy forward pass, then swap head to n_classes outputs
+        dummy = torch.zeros(1, 1, cfg["in_shape"][0])
+        with torch.no_grad():
+            model(dummy)
+        model = _replace_head(model, mil, n_classes)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"])
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg["epochs"], eta_min=1e-6)
+    return model.to(cfg["device"]), optimizer, scheduler
 
 
 
