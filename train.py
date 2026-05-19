@@ -25,7 +25,7 @@ def cleaning_csv(df_path, marker, encoder, element):
     df_label = df_label[df_label["stain"] == marker]
     df_label = df_label[["patient_id", element]].rename(columns={element: "Status"})
     df_label = df_label.dropna(subset=["Status"])
-    df_label["Status"] = df_label["Status"].astype(int)
+    df_label["Status"] = pd.factorize(df_label["Status"])[0]
     out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")
     df_label.to_csv(out_csv_marker, index=False)
     return out_csv_marker
