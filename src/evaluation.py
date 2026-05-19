@@ -10,7 +10,8 @@ from src.training_mil import run_epoch
 
 
 def evaluate(cfg, model, val_loader, optimizer):
-    model.load_state_dict(torch.load(os.path.join(cfg["output_dir"], "best_model.pth"), map_location=cfg["device"]))
+    # best_model_path = os.path.join(cfg["output_dir"], "best_model.pth")
+    # model.load_state_dict(torch.load(best_model_path, map_location=cfg["device"]))
     final_metrics, final_tracker = run_epoch(model, val_loader, optimizer, cfg["device"], train=False)
 
     print("\n" + "=" * 60)

@@ -118,3 +118,116 @@ feather, transmil, MYC, meilleur modèle — epoch 93, val AUC: 0.6821
 feather, abmil, MYC, meilleur modèle — epoch 46, val AUC: 0.5538
 
 feather, dsmil, MYC, meilleur modèle — epoch 26, val AUC: 0.6359
+
+Apres class_balance
+
+
+status, prism, transmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.5506
+
+status, prism, transmil, BCL2, meilleur modèle — epoch 37, val AUC: 0.6140
+
+status, prism, abmil, BCL2, meilleur modèle — epoch 15, val AUC: 0.5843
+
+status, prism, dsmil, BCL2, meilleur modèle — epoch 20, val AUC: 0.6491
+
+status, titan, transmil, BCL2, meilleur modèle — epoch 47, val AUC: 0.7314
+
+status, titan, abmil, BCL2, meilleur modèle — epoch 4, val AUC: 0.5101
+
+status, titan, dsmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.6046
+
+status, feather, transmil, BCL2, meilleur modèle — epoch 32, val AUC: 0.6032
+
+status, feather, abmil, BCL2, meilleur modèle — epoch 4, val AUC: 0.5101
+
+status, feather, dsmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.6046
+
+status, prism, transmil, BCL6, meilleur modèle — epoch 1, val AUC: 0.8333
+
+status, prism, abmil, BCL6, meilleur modèle — epoch 25, val AUC: 0.5394
+
+status, prism, dsmil, BCL6, meilleur modèle — epoch 36, val AUC: 0.6727
+
+status, titan, transmil, BCL6, meilleur modèle — epoch 1, val AUC: 0.8364
+
+status, titan, abmil, BCL6, meilleur modèle — epoch 3, val AUC: 0.6091
+
+status, titan, dsmil, BCL6, meilleur modèle — epoch 7, val AUC: 0.5061
+
+status, feather, transmil, BCL6, meilleur modèle — epoch 1, val AUC: 0.8364
+
+status, feather, abmil, BCL6, meilleur modèle — epoch 3, val AUC: 0.6091
+
+status, feather, dsmil, BCL6, meilleur modèle — epoch 7, val AUC: 0.5061
+
+status, prism, transmil, CD10, meilleur modèle — epoch 5, val AUC: 0.6722
+
+status, prism, abmil, CD10, meilleur modèle — epoch 23, val AUC: 0.5654
+
+status, prism, dsmil, CD10, meilleur modèle — epoch 1, val AUC: 0.5218
+
+status, titan, transmil, CD10, meilleur modèle — epoch 19, val AUC: 0.6767
+
+status, titan, abmil, CD10, meilleur modèle — epoch 17, val AUC: 0.4797
+
+status, titan, dsmil, CD10, meilleur modèle — epoch 1, val AUC: 0.5789
+
+status, feather, transmil, CD10, meilleur modèle — epoch 19, val AUC: 0.6962
+
+status, feather, abmil, CD10, meilleur modèle — epoch 17, val AUC: 0.4797
+
+status, feather, dsmil, CD10, meilleur modèle — epoch 1, val AUC: 0.5789
+
+status, prism, transmil, HE, meilleur modèle — epoch 3, val AUC: 0.5540
+
+status, prism, abmil, HE, meilleur modèle — epoch 5, val AUC: 0.4765
+
+status, prism, dsmil, HE, meilleur modèle — epoch 39, val AUC: 0.5402
+
+status, titan, transmil, HE, meilleur modèle — epoch 22, val AUC: 0.6343
+
+status, titan, abmil, HE, meilleur modèle — epoch 1, val AUC: 0.5817
+
+status, titan, dsmil, HE, meilleur modèle — epoch 27, val AUC: 0.5291
+
+status, feather, transmil, HE, meilleur modèle — epoch 9, val AUC: 0.5873
+
+status, feather, abmil, HE, meilleur modèle — epoch 1, val AUC: 0.5817
+
+status, feather, dsmil, HE, meilleur modèle — epoch 27, val AUC: 0.5291
+
+status, prism, transmil, MUM1, meilleur modèle — epoch 47, val AUC: 0.9221
+
+status, prism, abmil, MUM1, meilleur modèle — epoch 38, val AUC: 0.7180
+
+status, prism, dsmil, MUM1, meilleur modèle — epoch 1, val AUC: 0.6938
+
+status, titan, transmil, MUM1, meilleur modèle — epoch 4, val AUC: 0.9014
+
+status, titan, abmil, MUM1, meilleur modèle — epoch 1, val AUC: 0.6125
+
+status, titan, dsmil, MUM1, meilleur modèle — epoch 10, val AUC: 0.5311
+
+status, feather, transmil, MUM1, meilleur modèle — epoch 4, val AUC: 0.8962
+
+status, feather, abmil, MUM1, meilleur modèle — epoch 1, val AUC: 0.6125
+
+status, feather, dsmil, MUM1, meilleur modèle — epoch 10, val AUC: 0.5311
+
+status, prism, transmil, MYC, meilleur modèle — epoch 27, val AUC: 0.6492
+
+status, prism, abmil, MYC, meilleur modèle — epoch 35, val AUC: 0.6476
+
+status, prism, dsmil, MYC, meilleur modèle — epoch 1, val AUC: 0.7270
+
+status, titan, transmil, MYC, meilleur modèle — epoch 9, val AUC: 0.7254
+
+status, titan, abmil, MYC, meilleur modèle — epoch 3, val AUC: 0.5778
+
+status, titan, dsmil, MYC, meilleur modèle — epoch 21, val AUC: 0.5492
+
+status, feather, transmil, MYC, meilleur modèle — epoch 9, val AUC: 0.7556
+
+status, feather, abmil, MYC, meilleur modèle — epoch 3, val AUC: 0.5778
+
+status, feather, dsmil, MYC, meilleur modèle — epoch 21, val AUC: 0.5492

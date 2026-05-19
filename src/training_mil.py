@@ -77,7 +77,7 @@ def run_epoch(model, loader, optimizer, device, train=True):
     return tracker.compute(), tracker
 
 
-def plot_dashboard(history, best_epoch, best_val_auc, final_tracker, output_dir):
+def plot_dashboard(history, best_epoch, best_val_auc, final_tracker, save_path):
     """Génère et sauvegarde le dashboard matplotlib (6 panels)."""
     n_epochs = len(history["train_loss"])
     EPOCHS   = list(range(1, n_epochs + 1))
@@ -138,7 +138,7 @@ def plot_dashboard(history, best_epoch, best_val_auc, final_tracker, output_dir)
     disp.plot(ax=ax6, colorbar=False, cmap="Blues")
     ax6.set_title("Confusion Matrix (best model)")
 
-    plot_path = os.path.join(output_dir, "training_dashboard.png")
-    fig.savefig(plot_path, dpi=150, bbox_inches="tight")
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    fig.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"Dashboard sauvegardé → {plot_path}")
+    print(f"Dashboard sauvegardé → {save_path}")
