@@ -38,7 +38,7 @@ encoder_list = ["prism", "titan", "feather"]
 
 mil_list = ["transmil", "abmil", "dsmil"]
 
-status_list = ["status"]#["ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group"]
+status_list = ["ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group"]
 binary_list = ["status", "LDH"]
 
 ENCODER_CFG = {
@@ -54,7 +54,7 @@ for marker in marker_list :
                 enc = ENCODER_CFG[encoder]
                 out_csv_marker = cleaning_csv(dataframe_id, marker, encoder, status)
 
-                if binary_list.contains(status):
+                if status in binary_list :
                     type_class = "binary"
                 else : 
                     type_class = "multi_class"
@@ -130,7 +130,7 @@ for marker in marker_list :
                 history, best_epoch, best_val_auc = train(CFG, model, optimizer, scheduler, train_loader, val_loader)
                 final_tracker                     = evaluate(CFG, model, val_loader, optimizer)
 
-                save_path = os.path.join("output", f"{marker}_{encoder}_{mil}.png")
+                save_path = os.path.join("output", f"{marker}_{encoder}_{mil}_{status}.png")
                 plot_dashboard(history, best_epoch, best_val_auc, final_tracker, save_path)
                 #generate_heatmaps(CFG, model)
 

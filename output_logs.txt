@@ -196,19 +196,19 @@ status, feather, abmil, HE, meilleur modèle — epoch 1, val AUC: 0.5817
 
 status, feather, dsmil, HE, meilleur modèle — epoch 27, val AUC: 0.5291
 
-status, prism, transmil, MUM1, meilleur modèle — epoch 47, val AUC: 0.9221
+status, prism, transmil, MUM1, meilleur modèle — epoch 47, val AUC: 0.9221  best
 
 status, prism, abmil, MUM1, meilleur modèle — epoch 38, val AUC: 0.7180
 
 status, prism, dsmil, MUM1, meilleur modèle — epoch 1, val AUC: 0.6938
 
-status, titan, transmil, MUM1, meilleur modèle — epoch 4, val AUC: 0.9014
+status, titan, transmil, MUM1, meilleur modèle — epoch 4, val AUC: 0.9014  best
 
 status, titan, abmil, MUM1, meilleur modèle — epoch 1, val AUC: 0.6125
 
 status, titan, dsmil, MUM1, meilleur modèle — epoch 10, val AUC: 0.5311
 
-status, feather, transmil, MUM1, meilleur modèle — epoch 4, val AUC: 0.8962
+status, feather, transmil, MUM1, meilleur modèle — epoch 4, val AUC: 0.8962  best
 
 status, feather, abmil, MUM1, meilleur modèle — epoch 1, val AUC: 0.6125
 
@@ -231,3 +231,7 @@ status, feather, transmil, MYC, meilleur modèle — epoch 9, val AUC: 0.7556
 status, feather, abmil, MYC, meilleur modèle — epoch 3, val AUC: 0.5778
 
 status, feather, dsmil, MYC, meilleur modèle — epoch 21, val AUC: 0.5492
+
+
+
+Tester differents parametres
