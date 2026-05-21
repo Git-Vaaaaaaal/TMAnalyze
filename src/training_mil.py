@@ -76,12 +76,15 @@ def run_epoch(model, loader, optimizer, device, train=True):
 
             out    = model(X)
             logits = out if isinstance(out, torch.Tensor) else out[0]
+            # DSMIL multi-class: bag_classifier output shape is [B, 1, n_classes] — squeeze the middle dim
+            if logits.dim() == 3 and logits.shape[1] == 1:
+                logits = logits.squeeze(1)
 
             is_multiclass = logits.dim() > 1 and logits.shape[-1] > 1
             if is_multiclass:
-                loss = model.criterion(logits, Y.long().squeeze(-1))
+                loss = model.criterion(logits, Y.long().flatten())
             else:
-                loss = model.criterion(logits.squeeze(-1), Y.float().squeeze(-1))
+                loss = model.criterion(logits.flatten(), Y.float().flatten())
 
             if train:
                 loss.backward()

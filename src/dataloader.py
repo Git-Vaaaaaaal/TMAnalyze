@@ -81,8 +81,8 @@ def _replace_head(model, mil_name, n_classes):
         model.classifier = torch.nn.Linear(in_f, n_classes)
     elif mil_name == "dsmil":
         in_f = model.bag_classifier.in_features
-        model.bag_classifier  = torch.nn.Linear(in_f, n_classes)
-        model.inst_classifier = torch.nn.Linear(in_f, n_classes)
+        model.bag_classifier = torch.nn.Linear(in_f, n_classes)
+        # inst_classifier kept at 1 output: used for critical-instance selection, must stay binary
     return model
 
 

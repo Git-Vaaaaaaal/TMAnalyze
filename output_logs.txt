@@ -235,3 +235,258 @@ status, feather, dsmil, MYC, meilleur modèle — epoch 21, val AUC: 0.5492
 
 
 Tester differents parametres
+
+
+ECOG PS, prism, transmil, BCL2, meilleur modèle — epoch 56, val AUC: 0.6768
+
+LDH, prism, transmil, BCL2, meilleur modèle — epoch 20, val AUC: 0.6364
+
+EN, prism, transmil, BCL2, meilleur modèle — epoch 42, val AUC: 0.7891
+
+Stage, prism, transmil, BCL2, meilleur modèle — epoch 45, val AUC: 0.5779
+
+IPI Score, prism, transmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.6699
+
+IPI Risk Group (4 Class), prism, transmil, BCL2, meilleur modèle — epoch 17, val AUC: 0.5491
+
+RIPI Risk Group, prism, transmil, BCL2, meilleur modèle — epoch 46, val AUC: 0.6770
+
+ECOG PS, prism, abmil, BCL2, meilleur modèle — epoch 34, val AUC: 0.6445
+
+LDH, prism, abmil, BCL2, meilleur modèle — epoch 27, val AUC: 0.5829
+
+EN, prism, abmil, BCL2, meilleur modèle — epoch 27, val AUC: 0.7255
+
+Stage, prism, abmil, BCL2, meilleur modèle — epoch 52, val AUC: 0.5709
+
+IPI Score, prism, abmil, BCL2, meilleur modèle — epoch 2, val AUC: 0.5809
+
+IPI Risk Group (4 Class), prism, abmil, BCL2, meilleur modèle — epoch 16, val AUC: 0.5454
+
+RIPI Risk Group, prism, abmil, BCL2, meilleur modèle — epoch 2, val AUC: 0.6523
+
+ECOG PS, prism, dsmil, BCL2, meilleur modèle — epoch 24, val AUC: 0.7050
+
+LDH, prism, dsmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.5495
+
+EN, prism, dsmil, BCL2, meilleur modèle — epoch 16, val AUC: 0.7391
+
+Stage, prism, dsmil, BCL2, meilleur modèle — epoch 32, val AUC: 0.6032
+
+IPI Score, prism, dsmil, BCL2, meilleur modèle — epoch 2, val AUC: 0.6146
+
+IPI Risk Group (4 Class), prism, dsmil, BCL2, meilleur modèle — epoch 7, val AUC: 0.5472
+
+RIPI Risk Group, prism, dsmil, BCL2, meilleur modèle — epoch 24, val AUC: 0.6688
+
+ECOG PS, titan, transmil, BCL2, meilleur modèle — epoch 53, val AUC: 0.6539
+
+LDH, titan, transmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.6110
+
+EN, titan, transmil, BCL2, meilleur modèle — epoch 8, val AUC: 0.7762
+
+Stage, titan, transmil, BCL2, meilleur modèle — epoch 9, val AUC: 0.6235
+
+IPI Score, titan, transmil, BCL2, meilleur modèle — epoch 39, val AUC: 0.6464
+
+IPI Risk Group (4 Class), titan, transmil, BCL2, meilleur modèle — epoch 2, val AUC: 0.6175
+
+RIPI Risk Group, titan, transmil, BCL2, meilleur modèle — epoch 42, val AUC: 0.7280
+
+ECOG PS, titan, abmil, BCL2, meilleur modèle — epoch 47, val AUC: 0.6543
+
+LDH, titan, abmil, BCL2, meilleur modèle — epoch 50, val AUC: 0.6297
+
+EN, titan, abmil, BCL2, meilleur modèle — epoch 31, val AUC: 0.7186
+
+Stage, titan, abmil, BCL2, meilleur modèle — epoch 39, val AUC: 0.5771
+
+IPI Score, titan, abmil, BCL2, meilleur modèle — epoch 7, val AUC: 0.6159
+
+IPI Risk Group (4 Class), titan, abmil, BCL2, meilleur modèle — epoch 11, val AUC: 0.5545
+
+RIPI Risk Group, titan, abmil, BCL2, meilleur modèle — epoch 26, val AUC: 0.5964
+
+ECOG PS, titan, dsmil, BCL2, meilleur modèle — epoch 31, val AUC: 0.6036
+
+LDH, titan, dsmil, BCL2, meilleur modèle — epoch 8, val AUC: 0.5922
+
+EN, titan, dsmil, BCL2, meilleur modèle — epoch 3, val AUC: 0.6296
+
+Stage, titan, dsmil, BCL2, meilleur modèle — epoch 4, val AUC: 0.5719
+
+IPI Score, titan, dsmil, BCL2, meilleur modèle — epoch 7, val AUC: 0.6218
+
+IPI Risk Group (4 Class), titan, dsmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.6082
+
+RIPI Risk Group, titan, dsmil, BCL2, meilleur modèle — epoch 53, val AUC: 0.5978
+
+ECOG PS, feather, transmil, BCL2, meilleur modèle — epoch 44, val AUC: 0.6920
+
+LDH, feather, transmil, BCL2, meilleur modèle — epoch 33, val AUC: 0.6150
+
+EN, feather, transmil, BCL2, meilleur modèle — epoch 15, val AUC: 0.7589
+
+Stage, feather, transmil, BCL2, meilleur modèle — epoch 9, val AUC: 0.6204
+
+IPI Score, feather, transmil, BCL2, meilleur modèle — epoch 16, val AUC: 0.6532
+
+IPI Risk Group (4 Class), feather, transmil, BCL2, meilleur modèle — epoch 2, val AUC: 0.6175
+
+RIPI Risk Group, feather, transmil, BCL2, meilleur modèle — epoch 37, val AUC: 0.7329
+
+ECOG PS, feather, abmil, BCL2, meilleur modèle — epoch 47, val AUC: 0.6543
+
+LDH, feather, abmil, BCL2, meilleur modèle — epoch 50, val AUC: 0.6297
+
+EN, feather, abmil, BCL2, meilleur modèle — epoch 31, val AUC: 0.7186
+
+Stage, feather, abmil, BCL2, meilleur modèle — epoch 39, val AUC: 0.5771
+
+IPI Score, feather, abmil, BCL2, meilleur modèle — epoch 7, val AUC: 0.6159
+
+IPI Risk Group (4 Class), feather, abmil, BCL2, meilleur modèle — epoch 11, val AUC: 0.5545
+
+RIPI Risk Group, feather, abmil, BCL2, meilleur modèle — epoch 26, val AUC: 0.5964
+
+ECOG PS, feather, dsmil, BCL2, meilleur modèle — epoch 31, val AUC: 0.6036
+
+LDH, feather, dsmil, BCL2, meilleur modèle — epoch 8, val AUC: 0.5922
+
+EN, feather, dsmil, BCL2, meilleur modèle — epoch 3, val AUC: 0.6296
+
+Stage, feather, dsmil, BCL2, meilleur modèle — epoch 4, val AUC: 0.5719
+
+IPI Score, feather, dsmil, BCL2, meilleur modèle — epoch 7, val AUC: 0.6218
+
+IPI Risk Group (4 Class), feather, dsmil, BCL2, meilleur modèle — epoch 1, val AUC: 0.6082
+
+RIPI Risk Group, feather, dsmil, BCL2, meilleur modèle — epoch 53, val AUC: 0.5978
+
+ECOG PS, prism, transmil, BCL6, meilleur modèle — epoch 42, val AUC: 0.7457
+
+LDH, prism, transmil, BCL6, meilleur modèle — epoch 40, val AUC: 0.7760
+
+EN, prism, transmil, BCL6, meilleur modèle — epoch 9, val AUC: 0.6652
+
+Stage, prism, transmil, BCL6, meilleur modèle — epoch 9, val AUC: 0.6473
+
+IPI Score, prism, transmil, BCL6, meilleur modèle — epoch 38, val AUC: 0.6613
+
+IPI Risk Group (4 Class), prism, transmil, BCL6, meilleur modèle — epoch 15, val AUC: 0.6057
+
+RIPI Risk Group, prism, transmil, BCL6, meilleur modèle — epoch 41, val AUC: 0.6342
+
+ECOG PS, prism, abmil, BCL6, meilleur modèle — epoch 36, val AUC: 0.7293
+
+LDH, prism, abmil, BCL6, meilleur modèle — epoch 4, val AUC: 0.6484
+
+EN, prism, abmil, BCL6, meilleur modèle — epoch 4, val AUC: 0.6160
+
+Stage, prism, abmil, BCL6, meilleur modèle — epoch 15, val AUC: 0.5552
+
+IPI Score, prism, abmil, BCL6, meilleur modèle — epoch 16, val AUC: 0.6729
+
+IPI Risk Group (4 Class), prism, abmil, BCL6, meilleur modèle — epoch 24, val AUC: 0.6431
+
+RIPI Risk Group, prism, abmil, BCL6, meilleur modèle — epoch 9, val AUC: 0.6253
+
+ECOG PS, prism, dsmil, BCL6, meilleur modèle — epoch 2, val AUC: 0.7612
+
+LDH, prism, dsmil, BCL6, meilleur modèle — epoch 13, val AUC: 0.6458
+
+EN, prism, dsmil, BCL6, meilleur modèle — epoch 4, val AUC: 0.6734
+
+Stage, prism, dsmil, BCL6, meilleur modèle — epoch 23, val AUC: 0.6124
+
+IPI Score, prism, dsmil, BCL6, meilleur modèle — epoch 47, val AUC: 0.5769
+
+IPI Risk Group (4 Class), prism, dsmil, BCL6, meilleur modèle — epoch 1, val AUC: 0.6020
+
+RIPI Risk Group, prism, dsmil, BCL6, meilleur modèle — epoch 8, val AUC: 0.6408
+
+ECOG PS, titan, transmil, BCL6, meilleur modèle — epoch 34, val AUC: 0.7162
+
+LDH, titan, transmil, BCL6, meilleur modèle — epoch 44, val AUC: 0.6797
+
+EN, titan, transmil, BCL6, meilleur modèle — epoch 56, val AUC: 0.6265
+
+Stage, titan, transmil, BCL6, meilleur modèle — epoch 2, val AUC: 0.6427
+
+IPI Score, titan, transmil, BCL6, meilleur modèle — epoch 3, val AUC: 0.6021
+
+IPI Risk Group (4 Class), titan, transmil, BCL6, meilleur modèle — epoch 2, val AUC: 0.5937
+
+RIPI Risk Group, titan, transmil, BCL6, meilleur modèle — epoch 32, val AUC: 0.6482
+
+ECOG PS, titan, abmil, BCL6, meilleur modèle — epoch 3, val AUC: 0.6829
+
+LDH, titan, abmil, BCL6, meilleur modèle — epoch 9, val AUC: 0.6510
+
+EN, titan, abmil, BCL6, meilleur modèle — epoch 21, val AUC: 0.6256
+
+Stage, titan, abmil, BCL6, meilleur modèle — epoch 6, val AUC: 0.5623
+
+IPI Score, titan, abmil, BCL6, meilleur modèle — epoch 12, val AUC: 0.5877
+
+IPI Risk Group (4 Class), titan, abmil, BCL6, meilleur modèle — epoch 34, val AUC: 0.6036
+
+RIPI Risk Group, titan, abmil, BCL6, meilleur modèle — epoch 13, val AUC: 0.5693
+
+ECOG PS, titan, dsmil, BCL6, meilleur modèle — epoch 7, val AUC: 0.6644
+
+LDH, titan, dsmil, BCL6, meilleur modèle — epoch 22, val AUC: 0.6771
+
+EN, titan, dsmil, BCL6, meilleur modèle — epoch 9, val AUC: 0.5499
+
+Stage, titan, dsmil, BCL6, meilleur modèle — epoch 2, val AUC: 0.6180
+
+IPI Score, titan, dsmil, BCL6, meilleur modèle — epoch 15, val AUC: 0.5653
+
+IPI Risk Group (4 Class), titan, dsmil, BCL6, meilleur modèle — epoch 23, val AUC: 0.6343
+
+RIPI Risk Group, titan, dsmil, BCL6, meilleur modèle — epoch 10, val AUC: 0.5133
+
+ECOG PS, feather, transmil, BCL6, meilleur modèle — epoch 37, val AUC: 0.6822
+
+LDH, feather, transmil, BCL6, meilleur modèle — epoch 9, val AUC: 0.6406
+
+EN, feather, transmil, BCL6, meilleur modèle — epoch 23, val AUC: 0.6112
+
+Stage, feather, transmil, BCL6, meilleur modèle — epoch 2, val AUC: 0.6427
+
+IPI Score, feather, transmil, BCL6, meilleur modèle — epoch 3, val AUC: 0.6021
+
+IPI Risk Group (4 Class), feather, transmil, BCL6, meilleur modèle — epoch 2, val AUC: 0.5937
+
+RIPI Risk Group, feather, transmil, BCL6, meilleur modèle — epoch 59, val AUC: 0.7556
+
+ECOG PS, feather, abmil, BCL6, meilleur modèle — epoch 3, val AUC: 0.6829
+
+LDH, feather, abmil, BCL6, meilleur modèle — epoch 9, val AUC: 0.6510
+
+EN, feather, abmil, BCL6, meilleur modèle — epoch 21, val AUC: 0.6256
+
+Stage, feather, abmil, BCL6, meilleur modèle — epoch 6, val AUC: 0.5623
+
+IPI Score, feather, abmil, BCL6, meilleur modèle — epoch 12, val AUC: 0.5877
+
+IPI Risk Group (4 Class), feather, abmil, BCL6, meilleur modèle — epoch 34, val AUC: 0.6036
+
+RIPI Risk Group, feather, abmil, BCL6, meilleur modèle — epoch 13, val AUC: 0.5693
+
+ECOG PS, feather, dsmil, BCL6, meilleur modèle — epoch 7, val AUC: 0.6644
+
+LDH, feather, dsmil, BCL6, meilleur modèle — epoch 22, val AUC: 0.6771
+
+EN, feather, dsmil, BCL6, meilleur modèle — epoch 9, val AUC: 0.5499
+
+Stage, feather, dsmil, BCL6, meilleur modèle — epoch 2, val AUC: 0.6180
+
+IPI Score, feather, dsmil, BCL6, meilleur modèle — epoch 15, val AUC: 0.5653
+
+IPI Risk Group (4 Class), feather, dsmil, BCL6, meilleur modèle — epoch 23, val AUC: 0.6343
+
+RIPI Risk Group, feather, dsmil, BCL6, meilleur modèle — epoch 10, val AUC: 0.5133
+
+ECOG PS, prism, transmil, CD10, meilleur modèle — epoch 33, val AUC: 0.7288
