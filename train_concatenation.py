@@ -32,10 +32,10 @@ from src.training_mil import plot_dashboard
 # Config — même structure que train.py
 # ======================================================================
 
-marker_list  = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
-encoder_list = ["prism"]#, "titan", "feather"]
-mil_list     = ["abmil"]#["transmil", "abmil", "dsmil"]
-status_list  = ["status"]#, "LDH", "Stage", "IPI Score",  "RIPI Risk Group"]
+marker_list  = ["HE"]#["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
+encoder_list = ["prism", "titan", "feather"]
+mil_list     = ["transmil", "abmil", "dsmil"]
+status_list  = ["status", "LDH"]#, "LDH", "Stage", "IPI Score",  "RIPI Risk Group"]
 
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow"),
@@ -433,4 +433,4 @@ for encoder in encoder_list:
             save_path = os.path.join("output_concat", f"{encoder}_{mil}_{status}.png")
             os.makedirs("output_concat", exist_ok=True)
             if final_tracker is not None:
-                plot_dashboard(history, best_epoch, best_val_auc, final_tracker, save_path)
+                plot_dashboard(history, best_epoch, final_tracker, save_path)

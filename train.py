@@ -30,7 +30,7 @@ def cleaning_csv(df_path, marker, encoder, element):
     return out_csv_marker
 
 
-marker_list = ["CD10", "HE", "MUM1", "MYC"]
+marker_list = ["HE"]
 
 dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
@@ -38,7 +38,7 @@ encoder_list = ["prism", "titan", "feather"]
 
 mil_list = ["transmil", "abmil", "dsmil"]
 
-status_list = ["ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group"]
+status_list = ["LDH", "status"]
 
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
@@ -69,7 +69,7 @@ for marker in marker_list :
                     lr                 = 1e-4,
                     epochs             = 60,
                     batch_size         = 4,
-                    val_split          = 0.2,
+                    val_split          = 0.3,
                     device             = "cuda" if torch.cuda.is_available() else "cpu",
                     output_dir         = os.path.join("outputs_" + str(status), encoder, marker, mil),
                     seed               = 42,
@@ -101,14 +101,11 @@ for marker in marker_list :
                         if val_metrics["auc"] > best_val_auc:
                             best_val_auc = val_metrics["auc"]
                             best_epoch   = epoch
-                            # torch.save(model.state_dict(), os.path.join(cfg["output_dir"], "best_model.pth"))
 
-                        # if epoch % 10 == 0:
-                        #     torch.save(model.state_dict(), os.path.join(cfg["output_dir"], f"model_epoch{epoch:03d}.pth"))
 
                     msg = f"\n{status}, {encoder}, {mil}, {marker}, meilleur modèle — epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
                     print(msg)
-                    with open("output_logs.txt", "a") as f:
+                    with open("output_logs_HE.txt", "a") as f:
                         f.write(msg + "\n")
                     return history, best_epoch, best_val_auc
 
@@ -128,8 +125,8 @@ for marker in marker_list :
                 history, best_epoch, best_val_auc = train(CFG, model, optimizer, scheduler, train_loader, val_loader)
                 final_tracker                     = evaluate(CFG, model, val_loader, optimizer)
 
-                save_path = os.path.join("output", f"{marker}_{encoder}_{mil}_{status}.png")
-                plot_dashboard(history, best_epoch, best_val_auc, final_tracker, save_path)
+                save_path = os.path.join("output_HE", f"{encoder}_{mil}_{status}.png")
+                plot_dashboard(history, best_epoch, final_tracker, save_path)
                 #generate_heatmaps(CFG, model)
 
 
