@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, random_split
 from torchmil.data import collate_fn
 
-from src.class_mil import CSVMILDataset
 from src.training_mil import run_epoch, plot_dashboard
 from src.dataloader import build_dataloaders, build_model
 from src.evaluation import evaluate, generate_heatmaps
@@ -31,7 +30,7 @@ def cleaning_csv(df_path, marker, encoder, element):
     return out_csv_marker
 
 
-marker_list = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
+marker_list = ["CD10", "HE", "MUM1", "MYC"]
 
 dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 

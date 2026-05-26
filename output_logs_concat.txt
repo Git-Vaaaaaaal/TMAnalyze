@@ -1,0 +1,52 @@
+
+status | prism | transmil -- meilleur epoch 2, val AUC: 0.7045
+
+ECOG PS | prism | transmil -- meilleur epoch 44, val AUC: 0.7586
+
+LDH | prism | transmil -- meilleur epoch 30, val AUC: 0.7778
+
+EN | prism | transmil -- meilleur epoch 8, val AUC: 0.8142
+
+Stage | prism | transmil -- meilleur epoch 8, val AUC: 0.6331
+
+IPI Score | prism | transmil -- meilleur epoch 1, val AUC: 0.7022
+
+IPI Risk Group (4 Class) | prism | transmil -- meilleur epoch 20, val AUC: 0.7203
+
+RIPI Risk Group | prism | transmil -- meilleur epoch 28, val AUC: 0.6579
+
+status | prism | abmil -- meilleur epoch 51, val AUC: 0.7500
+
+ECOG PS | prism | abmil -- meilleur epoch 4, val AUC: 0.5855
+
+LDH | prism | abmil -- meilleur epoch 47, val AUC: 0.6667
+
+EN | prism | abmil -- meilleur epoch 4, val AUC: 0.6521
+
+Stage | prism | abmil -- meilleur epoch 24, val AUC: 0.5262
+
+IPI Score | prism | abmil -- meilleur epoch 31, val AUC: 0.6307
+
+IPI Risk Group (4 Class) | prism | abmil -- meilleur epoch 10, val AUC: 0.5882
+
+RIPI Risk Group | prism | abmil -- meilleur epoch 1, val AUC: 0.7334
+
+status | prism | dsmil -- meilleur epoch 1, val AUC: 0.4318
+
+ECOG PS | prism | dsmil -- meilleur epoch 8, val AUC: 0.7304
+
+LDH | prism | dsmil -- meilleur epoch 6, val AUC: 0.8704
+
+EN | prism | dsmil -- meilleur epoch 6, val AUC: 0.7418
+
+Stage | prism | dsmil -- meilleur epoch 14, val AUC: 0.5494
+
+IPI Score | prism | dsmil -- meilleur epoch 30, val AUC: 0.5323
+
+IPI Risk Group (4 Class) | prism | dsmil -- meilleur epoch 1, val AUC: 0.5721
+
+RIPI Risk Group | prism | dsmil -- meilleur epoch 32, val AUC: 0.6428
+
+status | titan | transmil -- meilleur epoch 17, val AUC: 0.9545
+
+ECOG PS | titan | transmil -- meilleur epoch 21, val AUC: 0.6447

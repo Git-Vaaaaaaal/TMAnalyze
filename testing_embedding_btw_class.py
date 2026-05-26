@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 # ---------------------------
 MARKERS = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
 
-LABELS_CSV = "id_label_patient_complete.csv"  # optionnel
+LABELS_CSV = "csv/id_label_patient_complete.csv"  # optionnel
 
 FILENAME_COL = "wsi_name"
 LABEL_COL = "status"
@@ -26,7 +26,7 @@ GROUP_COL = "group"
 # PATH BUILDER
 # ---------------------------
 def get_feature_path(marker):
-    return f"{marker}/job_dir/20.0x_64px_0px_overlap/slide_encoder_{marker}.csv"
+    return f"data/prism/{marker}/slide_features_prism/prism_encoder.csv"
 
 # ---------------------------
 # LOAD DATA

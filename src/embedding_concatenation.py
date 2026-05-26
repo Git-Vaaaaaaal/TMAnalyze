@@ -1,13 +1,14 @@
 """
-EmbeddingBagDataset — dataset MIL à partir de dossiers d'embeddings CSV.
+EmbeddingBagDataset — dataset MIL multi-images à partir de dictionnaires.
 
 Format CSV attendu (sans en-tête) :
     col 0  : x  (coordonnée)
     col 1  : y  (coordonnée)
     col 2+ : features
 
-Un dossier = un bag. Un bag peut contenir un ou plusieurs CSV ;
-toutes les instances sont concaténées en un seul tensor (N, D).
+Chaque patient = une liste de chemins CSV (un par image).
+Chaque CSV → un tenseur indépendant (N_i, D).
+Les images entre elles n'ont pas de corrélation (pas d'alignement sur x,y).
 """
 
 from __future__ import annotations
@@ -21,79 +22,66 @@ from torch.utils.data import Dataset
 
 
 class EmbeddingBagDataset(Dataset):
-    """Dataset MIL chargeant des bags depuis des dossiers d'embeddings CSV.
+    """Dataset MIL multi-images.
 
     Args:
-        bag_folders: Un chemin de dossier par bag.
-        labels:      Label entier correspondant à chaque bag.
-        use_coords:  Si True, les colonnes x et y sont conservées comme
-                     deux premières dimensions de feature (défaut : False).
+        bag_dict:   {patient_id: [chemin_csv_img1, ..., chemin_csv_imgK]}
+        label_dict: {patient_id: label_entier}
+        use_coords: Si True, les colonnes x et y (cols 0-1) sont incluses
+                    dans les features. Par défaut False.
+
+    Seuls les patients présents dans les deux dictionnaires sont conservés.
     """
 
     def __init__(
         self,
-        bag_folders: list[str | Path],
-        labels: list[int],
+        bag_dict:   dict[str, list[str | Path]],
+        label_dict: dict[str, int],
         use_coords: bool = False,
     ) -> None:
-        if len(bag_folders) != len(labels):
-            raise ValueError(
-                f"bag_folders ({len(bag_folders)}) et labels ({len(labels)}) "
-                "doivent avoir la même longueur."
-            )
-        if not bag_folders:
-            raise ValueError("bag_folders ne peut pas être vide.")
+        patient_ids = sorted(set(bag_dict.keys()) & set(label_dict.keys()))
+        if not patient_ids:
+            raise ValueError("Aucun patient commun entre bag_dict et label_dict.")
 
-        self.bag_folders: list[Path] = [Path(f) for f in bag_folders]
-        self.labels: list[int] = list(labels)
-        self.use_coords: bool = use_coords
-
-        missing = [str(f) for f in self.bag_folders if not f.is_dir()]
-        if missing:
-            raise FileNotFoundError(
-                f"Dossier(s) introuvable(s) : {', '.join(missing)}"
-            )
+        self.patient_ids: list[str]        = patient_ids
+        self.csv_paths:   list[list[Path]] = [
+            [Path(p) for p in bag_dict[pid]] for pid in patient_ids
+        ]
+        self.labels:      list[int]        = [label_dict[pid] for pid in patient_ids]
+        self.use_coords:  bool             = use_coords
 
     # ------------------------------------------------------------------
     # Chargement interne
     # ------------------------------------------------------------------
 
-    def _load_bag(self, folder: Path) -> torch.Tensor:
-        """Charge et concatène tous les CSV du dossier → tensor (N, D)."""
-        csv_files = sorted(folder.glob("*.csv"))
-        if not csv_files:
-            raise FileNotFoundError(f"Aucun fichier CSV dans : {folder}")
-
-        parts: list[np.ndarray] = []
-        for path in csv_files:
-            df = pd.read_csv(path, header=None, dtype=np.float32)
-            if df.shape[1] < 3:
-                raise ValueError(
-                    f"{path} : au moins 3 colonnes attendues (x, y, feat…), "
-                    f"trouvé {df.shape[1]}."
-                )
-            arr = df.values if self.use_coords else df.iloc[:, 2:].values
-            parts.append(arr)
-
-        return torch.from_numpy(np.concatenate(parts, axis=0))  # (N, D)
+    def _load_csv(self, path: Path) -> torch.Tensor:
+        """Charge un fichier CSV → tenseur (N, D)."""
+        df = pd.read_csv(path, dtype=np.float32)
+        if df.shape[1] < 3:
+            raise ValueError(
+                f"{path} : au moins 3 colonnes attendues (x, y, feat…), "
+                f"trouvé {df.shape[1]}."
+            )
+        arr = df.values if self.use_coords else df.iloc[:, 2:].values
+        return torch.from_numpy(arr.astype(np.float32))  # (N, D)
 
     # ------------------------------------------------------------------
     # Interface Dataset
     # ------------------------------------------------------------------
 
     def __len__(self) -> int:
-        return len(self.bag_folders)
+        return len(self.patient_ids)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
-        """Retourne (bag, label).
+    def __getitem__(self, idx: int) -> tuple[list[torch.Tensor], torch.Tensor]:
+        """Retourne (liste_de_tenseurs, label).
 
         Returns:
-            bag:   Tensor de shape (N, D) — N instances, D features.
-            label: Tensor scalaire de type torch.long.
+            images: Liste de tenseurs (N_i, D), un par fichier CSV.
+            label:  Tensor scalaire dtype torch.long.
         """
-        bag = self._load_bag(self.bag_folders[idx])
-        label = torch.tensor(self.labels[idx], dtype=torch.long)
-        return bag, label
+        images = [self._load_csv(p) for p in self.csv_paths[idx]]
+        label  = torch.tensor(self.labels[idx], dtype=torch.long)
+        return images, label
 
 
 # ======================================================================
@@ -102,33 +90,36 @@ class EmbeddingBagDataset(Dataset):
 
 
 def collate_bags(
-    batch: list[tuple[torch.Tensor, torch.Tensor]],
+    batch: list[tuple[list[torch.Tensor], torch.Tensor]],
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Collate function pour des bags de taille variable.
+    """Collate function pour des bags multi-images de taille variable.
 
-    Zero-pad les bags à la taille maximale du batch et produit un masque
-    booléen compatible avec ``torchmil.models.ABMIL(forward(X, mask))``.
+    Chaque bag est une liste de K tenseurs (N_i, D). La fonction construit :
+      - un tenseur paddé ``(B, K_max, N_max, D)``
+      - un masque         ``(B, K_max, N_max)``
 
     Args:
-        batch: Liste de ``(bag, label)`` renvoyée par EmbeddingBagDataset.
+        batch: Liste de ``(images, label)`` renvoyée par EmbeddingBagDataset.
 
     Returns:
-        bags:   Tensor de shape ``(B, max_N, D)``  — instances paddées.
-        labels: Tensor de shape ``(B,)``            — dtype torch.long.
-        mask:   Tensor de shape ``(B, max_N)``      — uint8 : 1 = réel, 0 = padding.
+        bags:   Tensor ``(B, K_max, N_max, D)`` — zero-paddé.
+        labels: Tensor ``(B,)``                  — dtype torch.long.
+        mask:   Tensor ``(B, K_max, N_max)``      — uint8 : 1=réel, 0=padding.
     """
-    bags, labels = zip(*batch)
+    images_list, labels = zip(*batch)
 
-    max_n: int = max(b.size(0) for b in bags)
-    feat_dim: int = bags[0].size(1)
-    batch_size: int = len(bags)
+    B     = len(images_list)
+    K_max = max(len(imgs) for imgs in images_list)
+    N_max = max(t.size(0) for imgs in images_list for t in imgs)
+    D     = images_list[0][0].size(1)
 
-    padded = bags[0].new_zeros(batch_size, max_n, feat_dim)
-    mask = torch.zeros(batch_size, max_n, dtype=torch.uint8)
+    bags = torch.zeros(B, K_max, N_max, D, dtype=torch.float32)
+    mask = torch.zeros(B, K_max, N_max,    dtype=torch.uint8)
 
-    for i, bag in enumerate(bags):
-        n = bag.size(0)
-        padded[i, :n] = bag
-        mask[i, :n] = 1
+    for b, imgs in enumerate(images_list):
+        for k, t in enumerate(imgs):
+            n = t.size(0)
+            bags[b, k, :n] = t
+            mask[b, k, :n] = 1
 
-    return padded, torch.stack(labels), mask
+    return bags, torch.stack(labels), mask

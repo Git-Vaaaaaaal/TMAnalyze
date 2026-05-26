@@ -10,6 +10,8 @@ from sklearn.metrics import (
     confusion_matrix, ConfusionMatrixDisplay,
     roc_curve, precision_recall_curve,
 )
+from torch.utils.data import DataLoader
+import inspect
 
 
 class MetricTracker:
@@ -185,3 +187,146 @@ def plot_dashboard(history, best_epoch, best_val_auc, final_tracker, save_path):
     fig.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"Dashboard sauvegardé → {save_path}")
+
+
+
+
+# ======================================================================
+# Concaténation
+# ======================================================================
+
+# ======================================================================
+# Epoch — gère mask optionnel (TransMIL n'en accepte pas) + binaire/multi-class
+# ======================================================================
+
+class _Tracker:
+    """Accumulateur léger compatible avec plot_dashboard."""
+    def __init__(self):
+        self.targets: list = []
+        self.probs:   list = []
+        self.preds:   list = []
+
+
+def run_epoch(
+    model,
+    loader:    DataLoader,
+    optimizer: torch.optim.Optimizer,
+    device:    torch.device,
+    n_classes: int,
+    train:     bool = True,
+) -> tuple[dict[str, float], _Tracker]:
+    model.train() if train else model.eval()
+
+    _has_mask    = "mask" in inspect.signature(model.forward).parameters
+    is_multiclass = n_classes > 2
+    total_loss   = 0.0
+    n_batches    = 0
+    tracker      = _Tracker()
+
+    ctx = torch.enable_grad() if train else torch.no_grad()
+    with ctx:
+        for bags, labels, mask in loader:
+            bags   = bags.to(device)
+            labels = labels.to(device)
+            mask   = mask.to(device)
+
+            if train:
+                optimizer.zero_grad()
+
+            out    = model(bags, mask) if _has_mask else model(bags)
+            logits = out if isinstance(out, torch.Tensor) else out[0]
+
+            # DSMIL multi-class: bag_classifier produit [B, 1, n_classes]
+            if logits.dim() == 3 and logits.shape[1] == 1:
+                logits = logits.squeeze(1)
+
+            if is_multiclass:
+                loss = model.criterion(logits, labels.long().flatten())
+                probs = torch.softmax(logits.detach(), dim=-1).cpu().numpy()
+                preds = probs.argmax(axis=-1).tolist()
+            else:
+                loss = model.criterion(logits.flatten(), labels.float().flatten())
+                probs = torch.sigmoid(logits.detach()).cpu().numpy().ravel()
+                preds = (probs >= 0.5).astype(int).tolist()
+                probs = probs.tolist()
+
+            if train:
+                loss.backward()
+                optimizer.step()
+
+            tgts = labels.detach().cpu().numpy().ravel().astype(int).tolist()
+            tracker.targets.extend(tgts)
+            tracker.probs.extend(probs if isinstance(probs, list) else probs.tolist())
+            tracker.preds.extend(preds)
+            total_loss += loss.item()
+            n_batches  += 1
+
+    y    = np.array(tracker.targets)
+    prob = np.array(tracker.probs)
+    pred = np.array(tracker.preds)
+    loss_ = total_loss / max(n_batches, 1)
+    acc   = float((pred == y).mean())
+
+    try:
+        from sklearn.metrics import roc_auc_score, average_precision_score
+        if prob.ndim == 2:
+            auc = roc_auc_score(y, prob, multi_class="ovr")
+            ap  = float("nan")
+        else:
+            auc = roc_auc_score(y, prob)
+            ap  = average_precision_score(y, prob)
+    except ValueError:
+        auc = ap = float("nan")
+
+    return dict(loss=loss_, acc=acc, auc=auc, ap=ap), tracker
+
+
+# ======================================================================
+# Boucle d'entraînement
+# ======================================================================
+
+def train_loop(
+    model,
+    optimizer,
+    scheduler,
+    train_loader: DataLoader,
+    val_loader:   DataLoader,
+    epochs:       int,
+    device:       torch.device,
+    n_classes:    int,
+    run_label:    str,
+) -> tuple[dict, int, float, _Tracker]:
+    history = {k: [] for k in ["train_loss", "val_loss", "train_acc", "val_acc",
+                                "train_auc", "val_auc", "train_ap", "val_ap"]}
+    best_val_auc = -1.0
+    best_epoch   = 0
+    final_tracker = None
+
+    for epoch in range(1, epochs + 1):
+        train_m, _       = run_epoch(model, train_loader, optimizer, device, n_classes, train=True)
+        val_m, tracker   = run_epoch(model, val_loader,   optimizer, device, n_classes, train=False)
+        scheduler.step()
+
+        for phase, m in [("train", train_m), ("val", val_m)]:
+            for key in ["loss", "acc", "auc", "ap"]:
+                history[f"{phase}_{key}"].append(m[key])
+
+        print(
+            f"Epoch {epoch:03d}/{epochs} | "
+            f"Train — loss: {train_m['loss']:.4f}  acc: {train_m['acc']:.3f}  AUC: {train_m['auc']:.3f} | "
+            f"Val   — loss: {val_m['loss']:.4f}  acc: {val_m['acc']:.3f}  AUC: {val_m['auc']:.3f}"
+        )
+
+        if val_m["auc"] > best_val_auc:
+            best_val_auc  = val_m["auc"]
+            best_epoch    = epoch
+            final_tracker = tracker
+            # torch.save(model.state_dict(), os.path.join(output_dir, "best_model.pth"))
+
+    msg = f"\n{run_label} — meilleur epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
+    print(msg)
+    with open("output_logs_concat.txt", "a") as f:
+        f.write(msg + "\n")
+
+    return history, best_epoch, best_val_auc, final_tracker
+
