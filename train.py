@@ -30,7 +30,7 @@ def cleaning_csv(df_path, marker, encoder, element):
     return out_csv_marker
 
 
-marker_list = ["HE"]
+marker_list = ["HE", "BCL2", "BCL6", "CD10", "MUM1", "MYC"]
 
 dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
