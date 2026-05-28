@@ -33,9 +33,9 @@ from src.training_mil import plot_dashboard
 # ======================================================================
 
 marker_list  = ["HE"]#["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
-encoder_list = ["feather"]#["prism", "titan", "feather"]
-mil_list     = ["dsmil"]#["transmil", "abmil", "dsmil"]
-status_list  = ["LDH"]#["status", "LDH", "Stage", "IPI Score",  "RIPI Risk Group"]
+encoder_list = ["prism", "titan", "feather"]
+mil_list     = ["transmil", "abmil", "dsmil"]
+status_list  = ["LDH", "status"]#["status", "LDH", "Stage", "IPI Score",  "RIPI Risk Group"]
 
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow"),
@@ -52,6 +52,7 @@ VAL_SPLIT  = 0.3
 SEED       = 42
 ID_COL     = "patient_id"
 
+os.makedirs("output_concat_HE", exist_ok=True)
 
 # ======================================================================
 # CSV helpers
@@ -378,7 +379,7 @@ def train_loop(
 
     msg = f"\n{run_label} -- meilleur epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
     print(msg)
-    with open("output_logs_concat.txt", "a") as f:
+    with open(os.path.join("output_concat_HE", "output_logs_concat.txt"), "a") as f:
         f.write(msg + "\n")
 
     return history, best_epoch, best_val_auc, final_tracker
@@ -430,7 +431,7 @@ for encoder in encoder_list:
                 run_label=run_label,
             )
 
-            save_path = os.path.join("output_concat", f"{encoder}_{mil}_{status}.png")
+            save_path = os.path.join("output_concat_HE", f"{encoder}_{mil}_{status}.png")
             os.makedirs("output_concat", exist_ok=True)
             if final_tracker is not None:
                 plot_dashboard(history, best_epoch, final_tracker, save_path)
