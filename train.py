@@ -59,7 +59,7 @@ for marker in marker_list :
                 n_classes  = int(pd.read_csv(out_csv_marker)["Status"].nunique())
                 type_class = "binary" if n_classes == 2 else "multi_class"
 
-                os.makedirs(os.path.join("outputs_" + str(status)), exist_ok=True)
+                #os.makedirs(os.path.join("outputs_" + str(status)), exist_ok=True)
 
                 CFG = dict(
                     slide_features_csv = os.path.join("data_64", encoder, marker, enc["slide_subdir"], enc["slide_csv"]),

@@ -432,6 +432,6 @@ for encoder in encoder_list:
             )
 
             save_path = os.path.join("output_concat_HE", f"{encoder}_{mil}_{status}.png")
-            os.makedirs("output_concat", exist_ok=True)
+            os.makedirs(save_path, exist_ok=True)
             if final_tracker is not None:
                 plot_dashboard(history, best_epoch, final_tracker, save_path)
