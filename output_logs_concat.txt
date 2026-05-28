@@ -50,3 +50,9 @@ RIPI Risk Group | prism | dsmil -- meilleur epoch 32, val AUC: 0.6428
 status | titan | transmil -- meilleur epoch 17, val AUC: 0.9545
 
 ECOG PS | titan | transmil -- meilleur epoch 21, val AUC: 0.6447
+
+status | prism | transmil -- meilleur epoch 5, val AUC: 0.6458
+
+LDH | prism | transmil -- meilleur epoch 6, val AUC: 0.7265
+
+status | prism | abmil -- meilleur epoch 3, val AUC: 0.7708

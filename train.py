@@ -46,6 +46,9 @@ ENCODER_CFG = {
     "feather": dict(in_shape=768,  tiles_subdir="features_conch_v15", slide_subdir="slide_features_feather", slide_csv="feather_encoder.csv"),
 }
 
+
+os.makedirs("output_64", exist_ok=True)
+
 for marker in marker_list :
     for encoder in encoder_list:
         for mil in mil_list :
@@ -59,9 +62,9 @@ for marker in marker_list :
                 os.makedirs(os.path.join("outputs_" + str(status)), exist_ok=True)
 
                 CFG = dict(
-                    slide_features_csv = os.path.join("data", encoder, marker, enc["slide_subdir"], enc["slide_csv"]),
+                    slide_features_csv = os.path.join("data_64", encoder, marker, enc["slide_subdir"], enc["slide_csv"]),
                     slide_id_col       = "wsi_name",
-                    tiles_dir          = os.path.join("data", encoder, marker, enc["tiles_subdir"]),
+                    tiles_dir          = os.path.join("data_64", encoder, marker, enc["tiles_subdir"]),
                     labels_csv         = out_csv_marker,
                     bag_keys           = ["X", "X_slide", "Y", "coords"],
                     model_mil          = mil,
@@ -71,7 +74,7 @@ for marker in marker_list :
                     batch_size         = 4,
                     val_split          = 0.3,
                     device             = "cuda" if torch.cuda.is_available() else "cpu",
-                    output_dir         = os.path.join("outputs_" + str(status), encoder, marker, mil),
+                    output_dir         = os.path.join("output_64", encoder, marker, mil),
                     seed               = 42,
                     type_class         = type_class,
                     n_classes          = n_classes,
@@ -105,7 +108,7 @@ for marker in marker_list :
 
                     msg = f"\n{status}, {encoder}, {mil}, {marker}, meilleur modèle — epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
                     print(msg)
-                    with open("output_logs_HE.txt", "a") as f:
+                    with open("output_64/output_logs.txt", "a") as f:
                         f.write(msg + "\n")
                     return history, best_epoch, best_val_auc
 

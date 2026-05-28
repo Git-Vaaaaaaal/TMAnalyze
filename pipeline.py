@@ -28,7 +28,7 @@ for marker in list_marker :
         search_nested = False
 
         magnification = 20.0
-        patch_size = 64
+        patch_size = 224
 
         GPU = 0
         device = f'cuda:{GPU}' if torch.cuda.is_available() else 'cpu'
