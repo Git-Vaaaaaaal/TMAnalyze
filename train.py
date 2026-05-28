@@ -108,7 +108,7 @@ for marker in marker_list :
 
                     msg = f"\n{status}, {encoder}, {mil}, {marker}, meilleur modèle — epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
                     print(msg)
-                    with open("output_64/output_logs.txt", "a") as f:
+                    with open(os.path.join("output_64", "output_logs.txt"), "a") as f:
                         f.write(msg + "\n")
                     return history, best_epoch, best_val_auc
 
@@ -128,7 +128,7 @@ for marker in marker_list :
                 history, best_epoch, best_val_auc = train(CFG, model, optimizer, scheduler, train_loader, val_loader)
                 final_tracker                     = evaluate(CFG, model, val_loader, optimizer)
 
-                save_path = os.path.join("output_HE", f"{encoder}_{mil}_{status}.png")
+                save_path = os.path.join("output_64", f"{encoder}_{mil}_{status}.png")
                 plot_dashboard(history, best_epoch, final_tracker, save_path)
                 #generate_heatmaps(CFG, model)
 

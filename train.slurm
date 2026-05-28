@@ -19,4 +19,4 @@ export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_ven
 set -x # activer l’echo des commandes
 
 #File to run 
-srun python /lustre/fsn1/projects/rech/ehe/udq27fb/trident/trident_torchmil/torchmil_process.py # executer son script
+srun python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train.py # script pour embedding des tuiles 224
