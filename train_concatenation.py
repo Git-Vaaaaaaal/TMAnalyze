@@ -32,7 +32,7 @@ from src.training_mil import plot_dashboard
 # Config — même structure que train.py
 # ======================================================================
 
-marker_list  = ["HE"]#["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
+marker_list  = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
 encoder_list = ["prism", "titan", "feather"]
 mil_list     = ["transmil", "abmil", "dsmil"]
 status_list  = ["LDH", "status"]#["status", "LDH", "Stage", "IPI Score",  "RIPI Risk Group"]
