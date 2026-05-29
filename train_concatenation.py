@@ -52,7 +52,6 @@ VAL_SPLIT  = 0.3
 SEED       = 42
 ID_COL     = "patient_id"
 
-os.makedirs("output_concat_HE", exist_ok=True)
 
 # ======================================================================
 # CSV helpers

@@ -24,7 +24,6 @@ def running_patch_embedding(processor, model_name, magnification, patch_size):
     # Embedding task
     encoder = encoder_factory(model_name)
     processor.run_patch_feature_extraction_job(
-        coords_dir=f'{magnification}x_{patch_size}px_{0}px_overlap',
         patch_encoder=encoder,
         patch_size=patch_size,
         target_mag=magnification,

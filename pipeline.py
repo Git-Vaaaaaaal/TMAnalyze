@@ -9,8 +9,8 @@ from env import hf_token
 
 login(hf_token)
 
-list_marker = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
-list_slide_encoder = ["prism", "feather", "titan"]
+list_marker = ["BCL1"]#["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
+list_slide_encoder = ["hibou_l", "musk", "openmidnight", "openmidnight", "virchow2"]# "hoptimus1" prism", "feather", "titan"]
 
 for marker in list_marker :
     for slide_encoder in list_slide_encoder :
@@ -47,4 +47,5 @@ for marker in list_marker :
             )
 
         encoder_name = f"{slide_encoder}"
-        running_slide_embedding(embedding, encoder_name, magnification, patch_size)
+        #running_slide_embedding(embedding, encoder_name, magnification, patch_size)
+        running_patch_embedding(embedding, encoder_name, magnification, patch_size)
