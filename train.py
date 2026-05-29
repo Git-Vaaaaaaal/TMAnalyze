@@ -30,7 +30,7 @@ def cleaning_csv(df_path, marker, encoder, element):
     return out_csv_marker
 
 
-marker_list = ["HE", "BCL2", "BCL6", "CD10", "MUM1", "MYC"]
+marker_list = ["HE"]#, "BCL2", "BCL6", "CD10", "MUM1", "MYC"]
 
 dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
@@ -128,7 +128,7 @@ for marker in marker_list :
                 history, best_epoch, best_val_auc = train(CFG, model, optimizer, scheduler, train_loader, val_loader)
                 final_tracker                     = evaluate(CFG, model, val_loader, optimizer)
 
-                save_path = os.path.join("output_64", f"{encoder}_{mil}_{status}.png")
+                save_path = os.path.join("output_64", f"{marker}_{encoder}_{mil}_{status}.png")
                 plot_dashboard(history, best_epoch, final_tracker, save_path)
                 #generate_heatmaps(CFG, model)
 
