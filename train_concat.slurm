@@ -11,7 +11,6 @@
 #SBATCH --error=logs.out
 #SBATCH -A ehe@v100
 module purge # nettoyer les modules herites par defaut
-conda deactivate # desactiver les environnements herites par defaut
 module load python
 module load cuda/12.0.0
 module load arch/a100 # selectionner les modules compiles pour les A100
