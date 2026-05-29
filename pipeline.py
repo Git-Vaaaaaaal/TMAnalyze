@@ -9,7 +9,7 @@ from env import hf_token
 
 login(hf_token)
 
-list_marker = ["BCL1"]#["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
+list_marker = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
 list_slide_encoder = ["hibou_l", "musk", "openmidnight", "openmidnight", "virchow2"]# "hoptimus1" prism", "feather", "titan"]
 
 for marker in list_marker :
