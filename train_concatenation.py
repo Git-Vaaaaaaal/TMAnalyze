@@ -24,15 +24,27 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchmil.models import ABMIL, DSMIL, TransMIL
 
 from src.embedding_concatenation import EmbeddingBagDataset, collate_bags
-from src.dataloader import _replace_head
 from src.training_mil import plot_dashboard
+
+
+def _replace_head(model, mil_name, n_classes):
+    if mil_name == "abmil":
+        in_f = model.classifier.module.in_features
+        model.classifier = nn.Linear(in_f, n_classes)
+    elif mil_name == "transmil":
+        in_f = model.classifier.in_features
+        model.classifier = nn.Linear(in_f, n_classes)
+    elif mil_name == "dsmil":
+        in_f = model.bag_classifier.in_features
+        model.bag_classifier = nn.Linear(in_f, n_classes)
+    return model
 
 
 # ======================================================================
 # Config — même structure que train.py
 # ======================================================================
 
-marker_list  = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
+
 encoder_list = ["prism", "titan", "feather"]
 mil_list     = ["transmil", "abmil", "dsmil"]
 status_list  = ["LDH", "status"]#["status", "LDH", "Stage", "IPI Score",  "RIPI Risk Group"]
