@@ -8,7 +8,7 @@ from trident.slide_encoder_models.load import encoder_factory as slide_encoder
 import pandas as pd
 
 def running_patch_embedding(processor, model_name, magnification, patch_size):
-    gpu = 0 # == cuda
+    device = f'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     # Segmentation task
     processor.run_segmentation_job()
@@ -27,12 +27,12 @@ def running_patch_embedding(processor, model_name, magnification, patch_size):
         patch_encoder=encoder,
         patch_size=patch_size,
         target_mag=magnification,
-        device=f'cuda:{gpu}'
+        device=device
     )
 
 
 def running_slide_embedding(processor, slide_model, magnification, patch_size):
-    gpu = 0 # == cuda
+    device = f'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     slide_to_patch_encoder_name = {
         'threads': 'conch_v15',
@@ -63,7 +63,7 @@ def running_slide_embedding(processor, slide_model, magnification, patch_size):
         patch_encoder=encoder,
         patch_size=patch_size,
         target_mag=magnification,
-        device=f'cuda:{gpu}'
+        device=device
     )
 
     # Embedding slide task 
@@ -74,5 +74,5 @@ def running_slide_embedding(processor, slide_model, magnification, patch_size):
         patch_size=patch_size,
         target_mag=magnification,
         slide_model=slide_model,
-        device=f'cuda:{gpu}'
+        device=device
     )
