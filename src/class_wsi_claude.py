@@ -609,8 +609,9 @@ class WSI:
         for imgs, _ in dataloader:
             imgs = imgs.to(device)
             with torch.autocast(
-                device_type='cuda', dtype=precision,
-                enabled=(precision != torch.float32),
+                device_type=device.split(':')[0],
+                dtype=precision,
+                enabled=(precision != torch.float32 and torch.cuda.is_available()),
             ):
                 batch_features = patch_encoder(imgs)
             features.append(batch_features.cpu().numpy())
