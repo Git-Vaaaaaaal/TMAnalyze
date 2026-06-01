@@ -1,22 +1,24 @@
 #!/bin/bash
-#SBATCH --job-name=training_torchmil
-#SBATCH --constraint=v100-32g
-#SBATCH --time=20:00:00
-#SBATCH --ntasks=1
-#SBATCH --qos=qos_gpu-t3
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=40
-#SBATCH --hint=nomultithread
-#SBATCH --output=train.out
-#SBATCH --error=logs.out
-#SBATCH -A ehe@v100
+#SBATCH --job-name=TravailGPU # nom du job
+#SBATCH --output=TravailGPU%j.out # fichier de sortie (%j = job ID)
+#SBATCH --error=TravailGPU%j.err # fichier d’erreur (%j = job ID)
+#SBATCH --constraint=a100 # demander des GPU A100 80 Go
+#SBATCH --nodes=2 # reserver 2 nœuds
+#SBATCH --ntasks=16 # reserver 16 taches (ou processus)
+#SBATCH --gres=gpu:8 # reserver 8 GPU par noeud
+#SBATCH --cpus-per-task=8 # reserver 8 CPU par tache (et memoire associee)
+#SBATCH --time=20:00:00 # temps maximal d’allocation "(HH:MM:SS)"
+#SBATCH --hint=nomultithread # desactiver l’hyperthreading
+#SBATCH -A ehe@a100
+
 module purge # nettoyer les modules herites par defaut
-module load python
-module load cuda/12.2.0
+conda deactivate # desactiver les environnements herites par defaut
 module load arch/a100 # selectionner les modules compiles pour les A100
-source /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_venv/bin/activate
-export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_venv/lib/python3.12.7/site-packages:$PYTHONPATH
+module load pytorch-gpu/py3/2.3.0 # charger les modules
 set -x # activer l’echo des commandes
+
 
 #File to run 
 srun python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_concatenation.py # script pour embedding des tuiles 224
+
+
