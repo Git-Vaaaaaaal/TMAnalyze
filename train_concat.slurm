@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=training_torchmil
 #SBATCH --constraint=v100-32g
-#SBATCH --time=20:00:00
+#SBATCH --time=48:00:00
 #SBATCH --ntasks=1
 #SBATCH --qos=qos_gpu-t3
 #SBATCH --gres=gpu:1
