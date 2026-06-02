@@ -44,7 +44,7 @@ def _replace_head(model, mil_name, n_classes):
 # Config — même structure que train.py
 # ======================================================================
 
-os.makedirs("output_concat_h100", exist_ok=True)
+os.makedirs("output_concat_h100_v2", exist_ok=True)
 
 encoder_list = ["prism", "titan", "feather"]
 mil_list     = ["transmil", "abmil", "dsmil"]
@@ -391,7 +391,7 @@ def train_loop(
 
     msg = f"\n{run_label} -- meilleur epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
     print(msg)
-    with open(os.path.join("output_concat_h100", "output_logs_h100.txt"), "a") as f:
+    with open(os.path.join("output_concat_h100_v2", "output_logs_h100.txt"), "a") as f:
         f.write(msg + "\n")
 
     return history, best_epoch, best_val_auc, final_tracker
@@ -443,6 +443,6 @@ for encoder in encoder_list:
                 run_label=run_label,
             )
 
-            save_path = os.path.join("output_concat_h100", f"{encoder}_{mil}_{status}.png")
+            save_path = os.path.join("output_concat_h100_v2", f"{encoder}_{mil}_{status}.png")
             if final_tracker is not None:
                 plot_dashboard(history, best_epoch, final_tracker, save_path)

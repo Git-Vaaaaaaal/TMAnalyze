@@ -3,9 +3,9 @@
 #SBATCH --output=TravailGPU%j.out # fichier de sortie (%j = job ID)
 #SBATCH --error=TravailGPU%j.err # fichier d’erreur (%j = job ID)
 #SBATCH --constraint=a100 # demander des GPU A100 80 Go
-#SBATCH --nodes=2 # reserver 2 nœuds
-#SBATCH --ntasks=16 # reserver 16 taches (ou processus)
-#SBATCH --gres=gpu:8 # reserver 8 GPU par noeud
+#SBATCH --nodes=1 # reserver 1 nœud
+#SBATCH --ntasks=1 # reserver 1 tache (processus unique)
+#SBATCH --gres=gpu:1 # reserver 1 GPU
 #SBATCH --cpus-per-task=8 # reserver 8 CPU par tache (et memoire associee)
 #SBATCH --time=20:00:00 # temps maximal d’allocation "(HH:MM:SS)"
 #SBATCH --hint=nomultithread # desactiver l’hyperthreading
@@ -20,7 +20,7 @@ export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_ven
 set -x # activer l’echo des commandes
 
 
-#File to run 
-srun python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_concatenation.py # script pour embedding des tuiles 224
+#File to run
+python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_concatenation.py
 
 

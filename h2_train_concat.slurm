@@ -3,9 +3,9 @@
 #SBATCH --output=h100_concat%j.out # fichier de sortie (%j = job ID)
 #SBATCH --error=h100_concat%j.err # fichier d’erreur (%j = job ID)
 #SBATCH --constraint=h100 # demander des GPU H100 80 Go
-#SBATCH --nodes=2 # reserver 2 nœuds
-#SBATCH --ntasks=8 # reserver 8 taches (ou processus)
-#SBATCH --gres=gpu:4 # reserver 4 GPU par noeud
+#SBATCH --nodes=1 # reserver 2 nœuds
+#SBATCH --ntasks=1 # reserver 8 taches (ou processus)
+#SBATCH --gres=gpu:1 # reserver 4 GPU par noeud
 #SBATCH --cpus-per-task=24 # reserver 24 CPU par tache (et memoire associee)
 #SBATCH --time=20:00:00 # temps maximal d’allocation "(HH:MM:SS)"
 #SBATCH --hint=nomultithread # desactiver l’hyperthreading
