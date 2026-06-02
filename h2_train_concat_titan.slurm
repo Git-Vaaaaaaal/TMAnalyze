@@ -5,7 +5,7 @@
 #SBATCH --constraint=h100 # demander des GPU H100 80 Go
 #SBATCH --nodes=1 # reserver 2 nœuds
 #SBATCH --ntasks=1 # reserver 8 taches (ou processus)
-#SBATCH --gres=gpu:1 # reserver 4 GPU par noeud
+#SBATCH --gres=gpu:4 # reserver 4 GPU par noeud
 #SBATCH --cpus-per-task=24 # reserver 24 CPU par tache (et memoire associee)
 #SBATCH --time=20:00:00 # temps maximal d’allocation "(HH:MM:SS)"
 #SBATCH --hint=nomultithread # desactiver l’hyperthreading

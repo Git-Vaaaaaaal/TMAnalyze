@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=h100_concat_v2 # nom du job
-#SBATCH --output=h100_concat%_v2.out # fichier de sortie (%j = job ID)
-#SBATCH --error=h100_concat_v2.err # fichier d’erreur (%j = job ID)
+#SBATCH --job-name=h100_feather # nom du job
+#SBATCH --output=h100_feather.out # fichier de sortie (%j = job ID)
+#SBATCH --error=h100_feather.err # fichier d’erreur (%j = job ID)
 #SBATCH --constraint=h100 # demander des GPU H100 80 Go
 #SBATCH --nodes=1 # reserver 2 nœuds
 #SBATCH --ntasks=1 # reserver 8 taches (ou processus)
