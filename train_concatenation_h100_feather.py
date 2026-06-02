@@ -65,6 +65,14 @@ VAL_SPLIT  = 0.3
 SEED       = 42
 ID_COL     = "patient_id"
 
+# --- Sharding multi-GPU -------------------------------------------------
+# Chaque processus traite les combinaisons dont (index % NUM_SHARDS) == SHARD_ID.
+# Lancé par le .slurm avec un process par GPU (CUDA_VISIBLE_DEVICES isolant 1 GPU).
+SHARD_ID    = int(os.environ.get("SHARD_ID", "0"))
+NUM_SHARDS  = int(os.environ.get("NUM_SHARDS", "1"))
+NUM_WORKERS = int(os.environ.get("NUM_WORKERS", "4"))
+OUT_DIR     = "output_concat_h100_v2"
+
 
 # ======================================================================
 # CSV helpers
@@ -213,10 +221,12 @@ def build_dataloaders(
     )
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, sampler=sampler,
-                              collate_fn=collate_bags, num_workers=0,
+                              collate_fn=collate_bags, num_workers=NUM_WORKERS,
+                              persistent_workers=NUM_WORKERS > 0,
                               pin_memory=torch.cuda.is_available())
     val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False,
-                              collate_fn=collate_bags, num_workers=0,
+                              collate_fn=collate_bags, num_workers=NUM_WORKERS,
+                              persistent_workers=NUM_WORKERS > 0,
                               pin_memory=torch.cuda.is_available())
 
     all_labels = np.array(labels)
@@ -391,7 +401,7 @@ def train_loop(
 
     msg = f"\n{run_label} -- meilleur epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
     print(msg)
-    with open(os.path.join("output_concat_h100_v2", "output_logs_h100.txt"), "a") as f:
+    with open(os.path.join(OUT_DIR, f"output_logs_h100_shard{SHARD_ID}.txt"), "a") as f:
         f.write(msg + "\n")
 
     return history, best_epoch, best_val_auc, final_tracker
@@ -404,13 +414,24 @@ def train_loop(
 torch.manual_seed(SEED)
 np.random.seed(SEED)
 
+# Chaque processus ne voit qu'un GPU (via CUDA_VISIBLE_DEVICES) -> cuda:0 local.
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-for encoder in encoder_list:
-    bag_dict = build_bag_dict_from_csv(dataframe_id, encoder)
+# Liste de toutes les combinaisons, puis filtrage par shard.
+all_combos = [(e, m, s) for e in encoder_list for m in mil_list for s in status_list]
+my_combos  = [c for i, c in enumerate(all_combos) if i % NUM_SHARDS == SHARD_ID]
+print(f"[SHARD {SHARD_ID}/{NUM_SHARDS}] {len(my_combos)}/{len(all_combos)} runs : {my_combos}")
 
-    for mil in mil_list:
-        for status in status_list:
+# Cache des bag_dict par encoder (évite de reconstruire entre combos d'un même shard).
+_bag_cache: dict[str, dict] = {}
+
+for encoder, mil, status in my_combos:
+    if encoder not in _bag_cache:
+        _bag_cache[encoder] = build_bag_dict_from_csv(dataframe_id, encoder)
+    bag_dict = _bag_cache[encoder]
+
+    if True:
+        if True:
             label_dict = build_label_dict(dataframe_id, status)
             n_classes  = len(set(label_dict.values()))
             in_dim     = ENCODER_CFG[encoder]["in_shape"]

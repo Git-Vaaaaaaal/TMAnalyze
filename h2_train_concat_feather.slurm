@@ -21,7 +21,25 @@ export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_ven
 
 set -x # activer l’echo des commandes
 
+cd /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze
 
-#File to run 
-srun python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_concatenation_h100_feather.py # script pour embedding des tuiles 224
+# --- Sharding : 1 process Python par GPU, chacun isole sur 1 GPU --------
+NUM_SHARDS=4
+# ~24 CPU / 4 process = 6 workers par process pour le DataLoader
+export NUM_WORKERS=6
+export NUM_SHARDS
+
+pids=""
+for i in $(seq 0 $((NUM_SHARDS - 1))); do
+    CUDA_VISIBLE_DEVICES=$i SHARD_ID=$i \
+        python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_concatenation_h100_feather.py &
+    pids="$pids $!"
+done
+
+# Attendre la fin des 4 process ; echouer si l'un d'eux echoue
+rc=0
+for p in $pids; do
+    wait "$p" || rc=1
+done
+exit $rc
 
