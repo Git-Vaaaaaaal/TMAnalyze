@@ -44,7 +44,8 @@ def _replace_head(model, mil_name, n_classes):
 # Config — même structure que train.py
 # ======================================================================
 
-os.makedirs("output_concat_h100_v2", exist_ok=True)
+os.makedirs("Result_h100_feather", exist_ok=True)
+os.makedirs(os.path.join("Result_h100_feather", ".progress"), exist_ok=True)
 
 encoder_list = ["feather"]
 mil_list     = ["transmil", "abmil", "dsmil"]
@@ -59,7 +60,7 @@ ENCODER_CFG = {
 dataframe_id = "common_patients_labels.csv"
 
 EPOCHS     = 60
-BATCH_SIZE = 4
+BATCH_SIZE = 32   # H100 80 Go : batch monte de 4 -> 32 pour mieux saturer le GPU
 LR         = 1e-4
 VAL_SPLIT  = 0.3
 SEED       = 42
@@ -71,7 +72,24 @@ ID_COL     = "patient_id"
 SHARD_ID    = int(os.environ.get("SHARD_ID", "0"))
 NUM_SHARDS  = int(os.environ.get("NUM_SHARDS", "1"))
 NUM_WORKERS = int(os.environ.get("NUM_WORKERS", "4"))
-OUT_DIR     = "output_concat_h100_v2"
+
+# Dossier de résultats : un log de métriques par cas + fichiers de progression.
+RESULT_DIR   = "Result_h100_feather"
+PROGRESS_DIR = os.path.join(RESULT_DIR, ".progress")
+
+
+def write_progress(gidx: int, label: str, epoch: int, total: int, state: str) -> None:
+    """Écrit (atomiquement) l'état d'un run pour le moniteur bash.
+
+    Format (tab-séparé) : label \\t epoch \\t total \\t state
+    state ∈ {pending, running, done, skip}
+    """
+    os.makedirs(PROGRESS_DIR, exist_ok=True)
+    dst = os.path.join(PROGRESS_DIR, f"{gidx:02d}.status")
+    tmp = dst + ".tmp"
+    with open(tmp, "w") as f:
+        f.write(f"{label}\t{epoch}\t{total}\t{state}\n")
+    os.replace(tmp, dst)  # rename atomique -> jamais de lecture partielle
 
 
 # ======================================================================
@@ -372,12 +390,19 @@ def train_loop(
     device:       torch.device,
     n_classes:    int,
     run_label:    str,
+    gidx:         int,
+    case_log:     str,
 ) -> tuple[dict, int, float, _Tracker]:
     history = {k: [] for k in ["train_loss", "val_loss", "train_acc", "val_acc",
                                 "train_auc", "val_auc", "train_ap", "val_ap"]}
     best_val_auc  = -1.0
     best_epoch    = 0
     final_tracker = None
+
+    # En-tête du log de métriques de ce cas.
+    with open(case_log, "w") as f:
+        f.write(f"# {run_label}\n")
+        f.write("# epoch | train_acc train_auc | val_acc val_auc (+ loss)\n")
 
     for epoch in range(1, epochs + 1):
         train_m, _      = run_epoch(model, train_loader, optimizer, device, n_classes, train=True)
@@ -388,21 +413,26 @@ def train_loop(
             for key in ["loss", "acc", "auc", "ap"]:
                 history[f"{phase}_{key}"].append(m[key])
 
-        print(
+        line = (
             f"Epoch {epoch:03d}/{epochs} | "
             f"Train -- loss: {train_m['loss']:.4f}  acc: {train_m['acc']:.3f}  AUC: {train_m['auc']:.3f} | "
             f"Val   -- loss: {val_m['loss']:.4f}  acc: {val_m['acc']:.3f}  AUC: {val_m['auc']:.3f}"
         )
+        # Métriques par epoch -> log du cas (et plus dans h100_feather.out).
+        with open(case_log, "a") as f:
+            f.write(line + "\n")
+        # Avancement -> lu par le moniteur bash pour h100_feather.out.
+        write_progress(gidx, run_label, epoch, epochs, "running")
 
         if val_m["auc"] > best_val_auc:
             best_val_auc  = val_m["auc"]
             best_epoch    = epoch
             final_tracker = tracker
 
-    msg = f"\n{run_label} -- meilleur epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
-    print(msg)
-    with open(os.path.join(OUT_DIR, f"output_logs_h100_shard{SHARD_ID}.txt"), "a") as f:
-        f.write(msg + "\n")
+    msg = f"{run_label} -- meilleur epoch {best_epoch}, val AUC: {best_val_auc:.4f}"
+    with open(case_log, "a") as f:
+        f.write("\n" + msg + "\n")
+    write_progress(gidx, run_label, epochs, epochs, "done")
 
     return history, best_epoch, best_val_auc, final_tracker
 
@@ -425,45 +455,56 @@ print(f"[SHARD {SHARD_ID}/{NUM_SHARDS}] {len(my_combos)}/{len(all_combos)} runs 
 # Cache des bag_dict par encoder (évite de reconstruire entre combos d'un même shard).
 _bag_cache: dict[str, dict] = {}
 
+# Index global (0..N) de chaque combo, identique dans tous les processus.
+gidx_of = {combo: i for i, combo in enumerate(all_combos)}
+
+# État initial "pending" pour tous mes combos, afin que le tableau soit complet
+# dès le démarrage (même pour le 2e run d'un shard pas encore commencé).
 for encoder, mil, status in my_combos:
+    run_label = f"{encoder} | {mil} | {status}"
+    write_progress(gidx_of[(encoder, mil, status)], run_label, 0, EPOCHS, "pending")
+
+for encoder, mil, status in my_combos:
+    gidx      = gidx_of[(encoder, mil, status)]
+    run_label = f"{encoder} | {mil} | {status}"
+    case_log  = os.path.join(RESULT_DIR, f"{gidx:02d}_{encoder}_{mil}_{status}.log")
+
     if encoder not in _bag_cache:
         _bag_cache[encoder] = build_bag_dict_from_csv(dataframe_id, encoder)
     bag_dict = _bag_cache[encoder]
 
-    if True:
-        if True:
-            label_dict = build_label_dict(dataframe_id, status)
-            n_classes  = len(set(label_dict.values()))
-            in_dim     = ENCODER_CFG[encoder]["in_shape"]
-            run_label  = f"{status} | {encoder} | {mil}"
+    label_dict = build_label_dict(dataframe_id, status)
+    n_classes  = len(set(label_dict.values()))
+    in_dim     = ENCODER_CFG[encoder]["in_shape"]
 
-            print(f"\n{'='*62}")
-            print(f"  {run_label}")
-            print(f"  Device : {device}" + (f" ({torch.cuda.get_device_name(0)})" if device.type == "cuda" else " [CPU]"))
-            print(f"  in_dim={in_dim}  n_classes={n_classes}  patients={len(bag_dict)}")
-            print(f"{'='*62}")
+    print(f"\n{'='*62}")
+    print(f"  {run_label}")
+    print(f"  Device : {device}" + (f" ({torch.cuda.get_device_name(0)})" if device.type == "cuda" else " [CPU]"))
+    print(f"  in_dim={in_dim}  n_classes={n_classes}  patients={len(bag_dict)}")
+    print(f"{'='*62}")
 
-            if n_classes < 2:
-                print(f"[SKIP] Une seule classe presente")
-                continue
+    if n_classes < 2:
+        print(f"[SKIP] Une seule classe presente")
+        write_progress(gidx, run_label, 0, EPOCHS, "skip")
+        continue
 
-            train_loader, val_loader = build_dataloaders(
-                bag_dict, label_dict, val_split=VAL_SPLIT,
-                batch_size=BATCH_SIZE, seed=SEED,
-            )
+    train_loader, val_loader = build_dataloaders(
+        bag_dict, label_dict, val_split=VAL_SPLIT,
+        batch_size=BATCH_SIZE, seed=SEED,
+    )
 
-            model, optimizer, scheduler = build_model(
-                mil_name=mil, in_dim=in_dim, n_classes=n_classes,
-                lr=LR, epochs=EPOCHS, device=device,
-            )
+    model, optimizer, scheduler = build_model(
+        mil_name=mil, in_dim=in_dim, n_classes=n_classes,
+        lr=LR, epochs=EPOCHS, device=device,
+    )
 
-            history, best_epoch, best_val_auc, final_tracker = train_loop(
-                model, optimizer, scheduler,
-                train_loader, val_loader,
-                epochs=EPOCHS, device=device, n_classes=n_classes,
-                run_label=run_label,
-            )
+    history, best_epoch, best_val_auc, final_tracker = train_loop(
+        model, optimizer, scheduler,
+        train_loader, val_loader,
+        epochs=EPOCHS, device=device, n_classes=n_classes,
+        run_label=run_label, gidx=gidx, case_log=case_log,
+    )
 
-            save_path = os.path.join("output_concat_h100_v2", f"{encoder}_{mil}_{status}.png")
-            if final_tracker is not None:
-                plot_dashboard(history, best_epoch, final_tracker, save_path)
+    save_path = os.path.join(RESULT_DIR, f"{gidx:02d}_{encoder}_{mil}_{status}.png")
+    if final_tracker is not None:
+        plot_dashboard(history, best_epoch, final_tracker, save_path)
