@@ -23,5 +23,5 @@ set -x # activer l’echo des commandes
 
 
 #File to run 
-srun python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_concatenation_h100.py # script pour embedding des tuiles 224
+srun python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_concatenation_h100_feather.py # script pour embedding des tuiles 224
 
