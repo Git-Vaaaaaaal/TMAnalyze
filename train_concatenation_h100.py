@@ -46,7 +46,7 @@ def _replace_head(model, mil_name, n_classes):
 
 os.makedirs("output_concat_h100_v2", exist_ok=True)
 
-encoder_list = ["prism", "titan", "feather"]
+encoder_list = ["titan", "feather"]
 mil_list     = ["transmil", "abmil", "dsmil"]
 status_list  = ["LDH", "status"]#["status", "LDH", "Stage", "IPI Score",  "RIPI Risk Group"]
 
