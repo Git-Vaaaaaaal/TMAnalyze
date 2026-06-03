@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=h100_train_new       # nom du job
-#SBATCH --output=h100_train_new_%j.out  # fichier de sortie (%j = job ID)
-#SBATCH --error=h100_train_new_%j.err   # fichier d'erreur (%j = job ID)
+#SBATCH --job-name=train_224     # nom du job
+#SBATCH --output=train_224.out  # fichier de sortie (%j = job ID)
+#SBATCH --error=train_224.err   # fichier d'erreur (%j = job ID)
 #SBATCH --constraint=h100               # demander des GPU H100 80 Go
 #SBATCH --nodes=1                       # reserver 1 noeud
 #SBATCH --ntasks=1                      # 1 tache shell (les shards sont des sous-processus)
