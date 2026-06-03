@@ -23,7 +23,7 @@ FILENAME_COL = "wsi_name"
 LABEL_COL = "status"
 GROUP_COL = "group"
 
-ENCODER = "virchow2"
+ENCODER_LIST = ["gpfm", "hibou_l", "musk", "openmidnight"]
 
 
 # ---------------------------
@@ -146,7 +146,6 @@ def plot_all(viz_data, encoder):
         plt.colorbar(sc2, ax=ax_tsne, fraction=0.03)
 
     plt.tight_layout()
-    os.makedirs(os.path.join("figure", encoder), exist_ok=True)
     save_path = os.path.join("figure", encoder, "all_projections.png")
     fig.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -157,57 +156,59 @@ def plot_all(viz_data, encoder):
 # ---------------------------
 if __name__ == "__main__":
 
-    acc_matrix = pd.DataFrame(index=MARKERS, columns=MARKERS, dtype=float)
-    sil_matrix = pd.DataFrame(index=MARKERS, columns=MARKERS, dtype=float)
-    viz_data   = []
+    for encoder in ENCODER_LIST:
+        acc_matrix = pd.DataFrame(index=MARKERS, columns=MARKERS, dtype=float)
+        sil_matrix = pd.DataFrame(index=MARKERS, columns=MARKERS, dtype=float)
+        viz_data   = []
+        os.makedirs(os.path.join("figure", encoder), exist_ok=True)
 
-    for m1, m2 in combinations(MARKERS, 2):
-        print(f"\n=== {m1} vs {m2} ===")
+        for m1, m2 in combinations(MARKERS, 2):
+            print(f"\n=== {m1} vs {m2} ===")
 
-        path_A = get_tiles_dir(m1, ENCODER)
-        path_B = get_tiles_dir(m2, ENCODER)
+            path_A = get_tiles_dir(m1, encoder)
+            path_B = get_tiles_dir(m2, encoder)
 
-        if not os.path.isdir(path_A) or not os.path.isdir(path_B):
-            print("Missing folder, skipping...")
-            continue
+            if not os.path.isdir(path_A) or not os.path.isdir(path_B):
+                print("Missing folder, skipping...")
+                continue
 
-        X, y = load_data_dual(
-            path_A,
-            path_B,
-            FILENAME_COL,
-            LABEL_COL,
-            LABELS_CSV
-        )
+            X, y = load_data_dual(
+                path_A,
+                path_B,
+                FILENAME_COL,
+                LABEL_COL,
+                LABELS_CSV
+            )
 
-        print(f"Dataset shape: {X.shape}")
+            print(f"Dataset shape: {X.shape}")
 
-        acc = classification_test(X, y)
-        sil = clustering_test(X, y)
+            acc = classification_test(X, y)
+            sil = clustering_test(X, y)
 
-        print(f"Accuracy: {acc:.4f}")
-        print(f"Silhouette: {sil:.4f}")
+            print(f"Accuracy: {acc:.4f}")
+            print(f"Silhouette: {sil:.4f}")
 
-        acc_matrix.loc[m1, m2] = acc
-        acc_matrix.loc[m2, m1] = acc
+            acc_matrix.loc[m1, m2] = acc
+            acc_matrix.loc[m2, m1] = acc
 
-        sil_matrix.loc[m1, m2] = sil
-        sil_matrix.loc[m2, m1] = sil
+            sil_matrix.loc[m1, m2] = sil
+            sil_matrix.loc[m2, m1] = sil
 
-        X_pca, X_tsne, y_enc = compute_projections(X, y)
-        viz_data.append((m1, m2, X_pca, X_tsne, y_enc))
+            X_pca, X_tsne, y_enc = compute_projections(X, y)
+            viz_data.append((m1, m2, X_pca, X_tsne, y_enc))
 
-    # diagonale
-    np.fill_diagonal(acc_matrix.values, 1.0)
-    np.fill_diagonal(sil_matrix.values, 0.0)
+        # diagonale
+        np.fill_diagonal(acc_matrix.values, 1.0)
+        np.fill_diagonal(sil_matrix.values, 0.0)
 
-    print("\n=== Accuracy Matrix ===")
-    print(acc_matrix)
+        print("\n=== Accuracy Matrix ===")
+        print(acc_matrix)
 
-    print("\n=== Silhouette Matrix ===")
-    print(sil_matrix)
+        print("\n=== Silhouette Matrix ===")
+        print(sil_matrix)
 
-    acc_matrix.to_csv("accuracy_matrix.csv")
-    sil_matrix.to_csv("silhouette_matrix.csv")
+        acc_matrix.to_csv(f"figure/{encoder}/accuracy_matrix.csv")
+        sil_matrix.to_csv(f"figure/{encoder}/silhouette_matrix.csv")
 
-    if viz_data:
-        plot_all(viz_data, ENCODER)
+        if viz_data:
+            plot_all(viz_data, encoder)

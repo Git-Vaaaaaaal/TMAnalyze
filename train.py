@@ -47,7 +47,7 @@ ENCODER_CFG = {
 }
 
 
-os.makedirs("output_64", exist_ok=True)
+os.makedirs("output", exist_ok=True)
 
 for marker in marker_list :
     for encoder in encoder_list:
@@ -128,7 +128,7 @@ for marker in marker_list :
                 history, best_epoch, best_val_auc = train(CFG, model, optimizer, scheduler, train_loader, val_loader)
                 final_tracker                     = evaluate(CFG, model, val_loader, optimizer)
 
-                save_path = os.path.join("output_64", f"{marker}_{encoder}_{mil}_{status}.png")
+                save_path = os.path.join("output", f"{marker}_{encoder}_{mil}_{status}.png")
                 plot_dashboard(history, best_epoch, final_tracker, save_path)
                 #generate_heatmaps(CFG, model)
 
