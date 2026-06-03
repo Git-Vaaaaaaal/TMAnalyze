@@ -46,7 +46,7 @@ def _replace_head(model, mil_name, n_classes):
 
 os.makedirs("output_concat_h100_v2", exist_ok=True)
 
-encoder_list = ["titan", "feather"]
+encoder_list = ["feather"]
 mil_list     = ["transmil", "abmil", "dsmil"]
 status_list  = ["LDH", "status"]#["status", "LDH", "Stage", "IPI Score",  "RIPI Risk Group"]
 
@@ -59,7 +59,7 @@ ENCODER_CFG = {
 dataframe_id = "common_patients_labels.csv"
 
 EPOCHS     = 60
-BATCH_SIZE = 4
+BATCH_SIZE = 32
 LR         = 1e-4
 VAL_SPLIT  = 0.3
 SEED       = 42

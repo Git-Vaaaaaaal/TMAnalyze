@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=h100_concat_v2 # nom du job
-#SBATCH --output=h100_concat%_v2.out # fichier de sortie (%j = job ID)
-#SBATCH --error=h100_concat_v2.err # fichier d’erreur (%j = job ID)
+#SBATCH --job-name=h100_titan # nom du job
+#SBATCH --output=h100_titan.out # fichier de sortie (%j = job ID)
+#SBATCH --error=h100_titan.err # fichier d’erreur (%j = job ID)
 #SBATCH --constraint=h100 # demander des GPU H100 80 Go
 #SBATCH --nodes=1 # reserver 2 nœuds
 #SBATCH --ntasks=1 # reserver 8 taches (ou processus)
@@ -23,5 +23,5 @@ set -x # activer l’echo des commandes
 
 
 #File to run 
-srun python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_concatenation_h100.py # script pour embedding des tuiles 224
+srun python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_concatenation_h100_titan.py # script pour embedding des tuiles 224
 
