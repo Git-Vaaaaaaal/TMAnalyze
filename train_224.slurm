@@ -21,7 +21,7 @@ export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_ven
 
 set -x
 
-SCRIPT=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/training_jz/train_new.py
+SCRIPT=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/train_new.py
 NUM_SHARDS=4
 NUM_WORKERS=10
 
