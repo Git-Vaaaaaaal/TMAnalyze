@@ -127,22 +127,25 @@ for idx, (encoder, marker, mil, status) in my_combinations:
     n_classes  = int(pd.read_csv(out_csv_marker)["Status"].nunique())
     type_class = "binary" if n_classes == 2 else "multi_class"
 
-    slide_features_csv = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
-    if not os.path.isfile(slide_features_csv):
-        print(f"[SKIP] slide_features_csv introuvable : {slide_features_csv}")
-        continue
-
     tiles_dir = os.path.join("data_224", encoder, marker, enc["tiles_subdir"])
     if not os.path.isdir(tiles_dir):
         print(f"[SKIP] tiles_dir introuvable : {tiles_dir}")
         continue
+
+    slide_features_csv = None
+    bag_keys           = ["X", "Y", "coords"]
+    if enc["slide_csv"]:
+        candidate = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
+        if os.path.isfile(candidate):
+            slide_features_csv = candidate
+            bag_keys           = ["X", "X_slide", "Y", "coords"]
 
     CFG = dict(
         slide_features_csv = slide_features_csv,
         slide_id_col       = "wsi_name",
         tiles_dir          = tiles_dir,
         labels_csv         = out_csv_marker,
-        bag_keys           = ["X", "X_slide", "Y", "coords"],
+        bag_keys           = bag_keys,
         model_mil          = mil,
         in_shape           = (enc["in_shape"],),
         lr                 = 1e-4,
