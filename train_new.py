@@ -147,7 +147,7 @@ for idx, (encoder, marker, mil, status) in my_combinations:
         in_shape           = (enc["in_shape"],),
         lr                 = 1e-4,
         epochs             = 60,
-        batch_size         = 128,
+        batch_size         = 256,
         val_split          = 0.3,
         device             = str(device),
         output_dir         = run_dir,
