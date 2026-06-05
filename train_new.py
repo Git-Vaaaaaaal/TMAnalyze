@@ -149,7 +149,7 @@ for idx, (encoder, marker, mil, status) in my_combinations:
         model_mil          = mil,
         in_shape           = (enc["in_shape"],),
         lr                 = 1e-4,
-        epochs             = 60,
+        epochs             = 80,
         batch_size         = 256,
         val_split          = 0.3,
         device             = str(device),

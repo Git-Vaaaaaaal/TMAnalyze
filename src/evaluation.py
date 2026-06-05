@@ -40,6 +40,9 @@ def generate_heatmaps(cfg, model):
 
             Y_pred, att = model(X, return_att=True)
             att = att.squeeze(0).cpu().numpy()
+            if att.ndim > 1:
+                att = att.mean(axis=-1)  # (N, K) -> (N,)
+            att = att.ravel()
             att = (att - att.min()) / (att.max() - att.min() + 1e-8)
 
             xs, ys = coords[:, 0], coords[:, 1]
