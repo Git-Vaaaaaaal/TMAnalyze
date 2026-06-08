@@ -100,6 +100,17 @@ class CSVMILDataset(torch.utils.data.Dataset):
         else:
             raise ValueError("Impossible de déterminer la liste des patients.")
 
+        # Filtrage : ne garder que les patients dont le CSV de tiles existe réellement
+        if tiles_dir is not None and "X" in bag_keys:
+            before = len(self.patient_ids)
+            self.patient_ids = [
+                pid for pid in self.patient_ids
+                if os.path.isfile(os.path.join(tiles_dir, f"{pid}.csv"))
+            ]
+            removed = before - len(self.patient_ids)
+            if removed > 0 and verbose:
+                print(f"[CSVMILDataset] {removed} patient(s) ignores (CSV tiles manquant sur {before})")
+
         # Chargement optionnel à l'init (même comportement que ProcessedMILDataset)
         self.loaded_bags = {}
         if self.load_at_init:
