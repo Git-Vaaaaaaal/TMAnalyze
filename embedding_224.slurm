@@ -26,6 +26,9 @@ export TRANSFORMERS_CACHE=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/hub
 # Mode offline : interdit tout appel reseau vers huggingface.co
 export HF_HUB_OFFLINE=1
 
+# Cache PyTorch / torchvision (resnet34 pour TMAx, etc.)
+export TORCH_HOME=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/torch
+
 set -x
 
 python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/pipeline.py
