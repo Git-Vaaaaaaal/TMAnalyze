@@ -23,6 +23,8 @@ export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_ven
 export HF_HOME=/lustre/fsn1/projects/rech/ehe/udq27fb/cache
 export HUGGINGFACE_HUB_CACHE=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/hub
 export TRANSFORMERS_CACHE=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/hub
+# Mode offline : interdit tout appel reseau vers huggingface.co
+export HF_HUB_OFFLINE=1
 
 set -x
 
