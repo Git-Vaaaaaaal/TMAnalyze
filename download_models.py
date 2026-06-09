@@ -44,10 +44,15 @@ SLIDE_ENCODER_REPOS = {
     "feather": "MahmoodLab/feather",
 }
 
+# Modeles de segmentation (TMAx — utilise dans run_segmentation_job)
+SEGMENTATION_REPOS = {
+    "tmax": "Vaaaal/TMAs",
+}
+
 # ------------------------------------------------------------------
 # Téléchargement
 # ------------------------------------------------------------------
-all_repos = {**PATCH_ENCODER_REPOS, **SLIDE_ENCODER_REPOS}
+all_repos = {**PATCH_ENCODER_REPOS, **SLIDE_ENCODER_REPOS, **SEGMENTATION_REPOS}
 
 for name, repo_id in all_repos.items():
     print(f"\n[{name}] Téléchargement depuis {repo_id} ...")
