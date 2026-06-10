@@ -31,4 +31,4 @@ export TORCH_HOME=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/torch
 
 set -x
 
-python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/pipeline.py
+python /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/pipeline_offline.py

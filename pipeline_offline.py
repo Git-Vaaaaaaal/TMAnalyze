@@ -4,14 +4,16 @@ from src.class_embedding import Processor
 import torch
 import os
 
-from huggingface_hub import login
 from env import hf_token
 
-login(hf_token)
+# Sur les noeuds sans internet (Jean-Zay GPU), login() crashe.
+# On passe le token via variable d'environnement et on force le mode offline.
+os.environ["HF_TOKEN"]             = hf_token
+os.environ["HUGGINGFACE_HUB_TOKEN"] = hf_token
+os.environ["HF_HUB_OFFLINE"]       = "1"
 
 list_marker = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
-list_slide_encoder = ["hibou_l", "musk"]
-#list_slide_encoder = ["gpfm", "openmidnight", "virchow2", "prism", "feather"]# "hoptimus1" prism", "feather", "titan"]
+list_slide_encoder = ["gpfm", "openmidnight", "virchow2", "prism", "feather"]# "hoptimus1" prism", "feather", "titan"]
 slide_list = ["titan", "prism", "feather"]
 
 
