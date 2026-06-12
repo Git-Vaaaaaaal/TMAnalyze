@@ -18,12 +18,14 @@ from env import hf_token
 
 login(hf_token)
 
-# Répertoire de cache — utilise HF_HOME si défini, sinon le défaut HF
-cache_dir = os.environ.get("HF_HOME", None)
-if cache_dir:
-    print(f"Cache HuggingFace : {cache_dir}")
+# Répertoire de cache — HF utilise automatiquement HF_HOME/hub si HF_HOME est défini.
+# Ne pas passer cache_dir explicitement pour éviter le mismatch avec hf_hub_download.
+hf_home = os.environ.get("HF_HOME", None)
+cache_dir = None  # laisse HF résoudre via HF_HOME → HF_HOME/hub
+if hf_home:
+    print(f"HF_HOME : {hf_home}  →  cache effectif : {hf_home}/hub")
 else:
-    print("Cache HuggingFace : défaut (~/.cache/huggingface)")
+    print("Cache HuggingFace : défaut (~/.cache/huggingface/hub)")
 
 # ------------------------------------------------------------------
 # Table : nom trident → repo HuggingFace

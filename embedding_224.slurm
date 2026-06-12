@@ -20,9 +20,9 @@ source /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_venv/bin/activ
 export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_venv/lib/python3.12.7/site-packages:$PYTHONPATH
 
 # Cache HuggingFace — pointe vers les poids pre-telecharges
-export HF_HOME=/lustre/fsn1/projects/rech/ehe/udq27fb/cache
-export HUGGINGFACE_HUB_CACHE=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/hub
-export TRANSFORMERS_CACHE=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/hub
+export HF_HOME=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/huggingface
+export HUGGINGFACE_HUB_CACHE=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/huggingface/hub
+export TRANSFORMERS_CACHE=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/huggingface/hub
 # Mode offline : interdit tout appel reseau vers huggingface.co
 export HF_HUB_OFFLINE=1
 
