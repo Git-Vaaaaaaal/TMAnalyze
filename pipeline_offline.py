@@ -12,8 +12,8 @@ os.environ["HF_TOKEN"]             = hf_token
 os.environ["HUGGINGFACE_HUB_TOKEN"] = hf_token
 os.environ["HF_HUB_OFFLINE"]       = "1"
 
-list_marker = ["MYC"] #"BCL2", "BCL6", "CD10", "HE", "MUM1", 
-list_slide_encoder = ["gpfm", "openmidnight", "hibou_l", "virchow2"]# "hoptimus1" prism", "feather", "titan"]
+list_marker = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"] #
+list_slide_encoder = ["musk"]# "hoptimus1" prism", "feather", "titan"]
 slide_list = ["titan", "prism", "feather"]
 
 
