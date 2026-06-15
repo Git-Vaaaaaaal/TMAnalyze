@@ -12,6 +12,7 @@ from src.training_mil import run_epoch, plot_dashboard
 from src.dataloader import build_dataloaders, build_model
 from src.evaluation import evaluate, generate_heatmaps
 
+from sklearn.model_selection import KFold  # ou LeaveOneOut
 
 """
 dropped_column = ["patient_id", "old_patient_id", "stain", "Age", "Status", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
@@ -45,9 +46,9 @@ dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
 encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism", "titan", "feather"]
 
-mil_list = ["transmil", "abmil", "dsmil"]
+mil_list = ["transmil", "abmil", "dsmil", "clam"]
 
-status_list = ["LDH", "status"]
+status_list = ["status"]
 
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
