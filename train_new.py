@@ -46,7 +46,7 @@ dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
 encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism", "titan", "feather"]
 
-mil_list = ["transmil", "abmil", "dsmil", "clam"]
+mil_list = ["abmil", "dsmil", "clam"]
 
 status_list = ["status"]
 
@@ -58,7 +58,7 @@ ENCODER_CFG = {
     "musk": dict(in_shape=1024,  tiles_subdir="features_musk", slide_subdir="", slide_csv=""),
     "openmidnight": dict(in_shape=1536,  tiles_subdir="features_openmidnight", slide_subdir="", slide_csv=""),
     "hibou_l": dict(in_shape=1024,  tiles_subdir="features_hibou_l", slide_subdir="", slide_csv=""),
-    "virchow2": dict(in_shape=1024,  tiles_subdir="features_virchow2", slide_subdir="", slide_csv=""),
+    "virchow2": dict(in_shape=2560,  tiles_subdir="features_virchow2", slide_subdir="", slide_csv=""),
 }
 
 

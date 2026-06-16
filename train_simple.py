@@ -41,7 +41,7 @@ ENCODER_CFG = {
     "musk":        dict(in_shape=1024, tiles_subdir="features_musk",         slide_subdir="", slide_csv=""),
     "openmidnight":dict(in_shape=1536, tiles_subdir="features_openmidnight", slide_subdir="", slide_csv=""),
     "hibou_l":     dict(in_shape=1024, tiles_subdir="features_hibou_l",      slide_subdir="", slide_csv=""),
-    "virchow2":    dict(in_shape=1024, tiles_subdir="features_virchow2",     slide_subdir="", slide_csv=""),
+    "virchow2":    dict(in_shape=2560, tiles_subdir="features_virchow2",     slide_subdir="", slide_csv=""),
 }
 
 
