@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from collections import defaultdict
 from torch.utils.data import DataLoader, WeightedRandomSampler
-from torchmil.models import ABMIL, DSMIL, TransMIL, CLAM_SB, DTFDMIL
+from torchmil.models import ABMIL, DSMIL, TransMIL, CLAM_SB, DTFDMIL, PatchGCN, DeepGraphSurv
 from torchmil.data import collate_fn
 from src.class_mil import CSVMILDataset
 from src.training_mil import run_epoch
@@ -93,7 +93,7 @@ def build_model(cfg):
     criterion = torch.nn.CrossEntropyLoss() if is_multi else torch.nn.BCEWithLogitsLoss()
     mil       = cfg["model_mil"]
 
-    model_cls = {"transmil": TransMIL, "abmil": ABMIL, "dsmil": DSMIL, "clam": CLAM_SB, "dftdmil": DTFDMIL}[mil]
+    model_cls = {"transmil": TransMIL, "abmil": ABMIL, "dsmil": DSMIL, "clam": CLAM_SB, "dtfdmil": DTFDMIL, "patchgcn": PatchGCN, "deepgraphsurv": DeepGraphSurv}[mil]
     model = model_cls(in_shape=cfg["in_shape"], criterion=criterion)
 
     if is_multi:

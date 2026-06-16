@@ -46,7 +46,7 @@ dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
 encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism", "titan", "feather"]
 
-mil_list = ["dtfdmil", "transmil"] #"abmil", "dsmil", "clam",
+mil_list = ["dtfdmil", "patchgcn", "deepgraphsurv"] #"abmil", "dsmil", "clam",
 
 status_list = ["status"]
 
