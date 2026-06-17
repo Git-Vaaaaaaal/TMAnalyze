@@ -144,6 +144,9 @@ for idx, (encoder, marker, mil, status) in my_combinations:
             slide_features_csv = candidate
             bag_keys           = ["X", "X_slide", "Y", "coords"]
 
+    if mil in ("patchgcn", "deepgraphsurv"):
+        bag_keys.append("adj")
+
     CFG = dict(
         slide_features_csv = slide_features_csv,
         slide_id_col       = "wsi_name",

@@ -75,7 +75,8 @@ def run_epoch(model, loader, optimizer, device, train=True):
             if train:
                 optimizer.zero_grad()
 
-            out    = model(X)
+            adj = batch.get("adj", None)
+            out = model(X, adj) if adj is not None else model(X)
             logits = out if isinstance(out, torch.Tensor) else out[0]
             # DSMIL multi-class: bag_classifier output shape is [B, 1, n_classes] — squeeze the middle dim
             if logits.dim() == 3 and logits.shape[1] == 1:
