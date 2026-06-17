@@ -75,11 +75,11 @@ def binarize_column(df, column: str, group_0: list, group_1: list) -> pd.DataFra
     return df
 
 
-def cleaning_csv(df_path, marker, element="Stage"):
+def cleaning_csv(df_path, marker, element="IPI Risk Group (4 Class)"):
     df = pd.read_csv(df_path)
     df = df[df["stain"] == marker]
     df = df[["patient_id", element]].rename(columns={element: "Status"})
-    df = binarize_column(df, element, group_0=[1.0, 2.0], group_1=[3.0, 4.0])
+    df_label = binarize_column(df_label, "Status", group_0=[0.0], group_1=[1.0, 2.0, 3.0])
     df["Status"] = (df["Status"] > 0).astype(int)
     return df
 
@@ -143,7 +143,7 @@ log_path = "output_logs_classical.txt"
 for marker in marker_list:
     for encoder in encoder_list:
         enc          = ENCODER_CFG[encoder]
-        features_csv = os.path.join("data", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
+        features_csv = os.path.join("export", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
 
         if not os.path.exists(features_csv):
             print(f"[SKIP] Fichier manquant : {features_csv}")
