@@ -34,7 +34,7 @@ dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 # Helpers
 # ---------------------------------------------------------------------------
 
-def cleaning_csv(df_path, marker, element="status"):
+def cleaning_csv(df_path, marker, element="Stage"):
     df = pd.read_csv(df_path)
     df = df[df["stain"] == marker]
     df = df[["patient_id", element]].rename(columns={element: "Status"})
