@@ -11,6 +11,7 @@ from torchmil.data import collate_fn
 from src.training_mil import run_epoch, plot_dashboard
 from src.dataloader import build_dataloaders, build_model
 from src.evaluation import evaluate, generate_heatmaps
+from src.csv_status import cleaning_csv
 
 from sklearn.model_selection import KFold  # ou LeaveOneOut
 
@@ -26,19 +27,6 @@ SHARD_ID    = int(os.environ.get("SHARD_ID", "0"))
 NUM_SHARDS  = int(os.environ.get("NUM_SHARDS", "1"))
 NUM_WORKERS = int(os.environ.get("NUM_WORKERS", "4"))
 
-def cleaning_csv(df_path, marker, encoder, element):
-    df_label = pd.read_csv(df_path)
-    df_label = df_label[df_label["stain"] == marker]
-    df_label = df_label[["patient_id", element]].rename(columns={element: "Status"})
-    df_label["Status"] = df_label["Status"].replace("", np.nan)
-    df_label = df_label.dropna(subset=["Status"])
-    df_label = df_label[df_label["Status"].astype(str).str.strip() != ""]
-    df_label["Status"] = pd.factorize(df_label["Status"])[0]
-    out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")
-    df_label.to_csv(out_csv_marker, index=False)
-    print(f"  [{element}] {len(df_label)} patients avec valeur valide")
-    return out_csv_marker
-
 
 marker_list = ["HE", "BCL2", "BCL6", "CD10", "MUM1", "MYC"]
 
@@ -48,7 +36,7 @@ encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism"
 
 mil_list = ["dtfdmil", "patchgcn", "deepgraphsurv"] #"abmil", "dsmil", "clam",
 
-status_list = ["status"]
+status_list = ["IPI Score"]
 
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
@@ -123,7 +111,7 @@ if torch.cuda.is_available():
 
 for idx, (encoder, marker, mil, status) in my_combinations:
     enc       = ENCODER_CFG[encoder]
-    run_dir   = os.path.join("output", encoder, marker, mil, status)
+    run_dir   = os.path.join("output_ipi", encoder, marker, mil, status)
     run_label = f"{status} | {encoder} | {mil} | {marker}"
     os.makedirs(run_dir, exist_ok=True)
 

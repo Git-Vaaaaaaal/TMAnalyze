@@ -34,10 +34,52 @@ dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 # Helpers
 # ---------------------------------------------------------------------------
 
+def binarize_column(df, column: str, group_0: list, group_1: list) -> pd.DataFrame:
+    """
+    Regroupe les valeurs d'une colonne en 0 / 1.
+
+    Args:
+        df         : DataFrame contenant les données
+        column     : colonne à transformer
+        group_0    : liste des valeurs à mapper → 0
+        group_1    : liste des valeurs à mapper → 1
+    """
+
+    if column not in df.columns:
+        print(f"Colonne '{column}' introuvable. Colonnes disponibles :")
+        print("  " + "\n  ".join(df.columns.tolist()))
+        return df
+
+    mapping = {str(v): 0 for v in group_0}
+    mapping.update({str(v): 1 for v in group_1})
+
+    src = df[column].astype(str)
+    unknown = set(src.dropna().unique()) - set(mapping.keys()) - {"nan"}
+    if unknown:
+        print(f"[ATTENTION] Valeurs non mappées (seront NaN) : {unknown}")
+
+    result = src.map(mapping)
+
+    df[column] = result.astype("Int64")
+
+    n_0       = (df[column] == 0).sum()
+    n_1       = (df[column] == 1).sum()
+    n_missing = df[column].isna().sum()
+
+    print(f"\n{'─' * 45}")
+    print(f"{'─' * 45}")
+    print(f"  Groupe 0  ({group_0}) : {n_0} patients")
+    print(f"  Groupe 1  ({group_1}) : {n_1} patients")
+    print(f"  Non mappés / NaN      : {n_missing}")
+    print(f"{'─' * 45}\n")
+    return df
+
+
 def cleaning_csv(df_path, marker, element="Stage"):
     df = pd.read_csv(df_path)
     df = df[df["stain"] == marker]
     df = df[["patient_id", element]].rename(columns={element: "Status"})
+    df = binarize_column(df, element, group_0=[1.0, 2.0], group_1=[3.0, 4.0])
     df["Status"] = (df["Status"] > 0).astype(int)
     return df
 

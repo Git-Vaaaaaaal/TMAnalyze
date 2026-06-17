@@ -68,10 +68,15 @@ def describe_categorical(csv_path: str, column: str, sep: str = ",") -> None:
     print(f"{'─' * 45}\n")
 
 
+
+
+
+# ── Exemples d'utilisation ──────────────────────────────────────────────
+
 csv_path = r"csv/clinical_data_cleaned.csv"
 
 column_name = "OS"
 describe_continuous(csv_path, column_name)
 
-column_name_cat = "Stage"
+column_name_cat = "IPI Score"
 describe_categorical(csv_path, column_name_cat)
