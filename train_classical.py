@@ -18,7 +18,7 @@ from sklearn.utils import resample
 
 
 marker_list  = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
-encoder_list = ["prism", "titan", "feather"]
+encoder_list = ["prism", "feather"]
 algo_list    = ["knn", "svm", "random_forest"]
 
 ENCODER_CFG = {
@@ -75,11 +75,12 @@ def binarize_column(df, column: str, group_0: list, group_1: list) -> pd.DataFra
     return df
 
 
-def cleaning_csv(df_path, marker, element="IPI Risk Group (4 Class)"):
+def cleaning_csv(df_path, marker, element="RIPI Risk Group"):
     df = pd.read_csv(df_path)
     df = df[df["stain"] == marker]
     df = df[["patient_id", element]].rename(columns={element: "Status"})
-    df_label = binarize_column(df_label, "Status", group_0=[0.0], group_1=[1.0, 2.0, 3.0])
+    df = binarize_column(df, "Status", group_0=[0,1], group_1=[2])
+    df = df.dropna(subset=["Status"])
     df["Status"] = (df["Status"] > 0).astype(int)
     return df
 
@@ -143,7 +144,7 @@ log_path = "output_logs_classical.txt"
 for marker in marker_list:
     for encoder in encoder_list:
         enc          = ENCODER_CFG[encoder]
-        features_csv = os.path.join("export", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
+        features_csv = os.path.join("export", "export", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
 
         if not os.path.exists(features_csv):
             print(f"[SKIP] Fichier manquant : {features_csv}")
