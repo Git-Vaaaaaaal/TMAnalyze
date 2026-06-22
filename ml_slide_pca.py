@@ -102,7 +102,7 @@ for marker in marker_list:
 
         parameters = {
             'n_estimators': df_marker["best_n_estimators"].iloc[0],
-            'max_depth': df_marker["best_max_depth"].iloc[0] if not pd.isna(df_marker["best_max_depth"].iloc[0]) else None,
+            'max_depth': int(df_marker["best_max_depth"].iloc[0]) if not pd.isna(df_marker["best_max_depth"].iloc[0]) else None,
             'min_samples_split': df_marker["best_min_samples_split"].iloc[0],
             'min_samples_leaf': df_marker["best_min_samples_leaf"].iloc[0],
             'max_features': df_marker["best_max_features"].iloc[0] if not pd.isna(df_marker["best_max_features"].iloc[0]) else None,
