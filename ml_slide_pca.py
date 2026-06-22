@@ -179,7 +179,7 @@ for marker in marker_list:
             fig.savefig(f"out_rfs/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
             plt.close(fig)
 
-csv_path = "out_rfs/results.csv"
+csv_path = "out_rfs_pca/results.csv"
 pd.DataFrame(results).to_csv(csv_path, index=False)
 print(f"\nRésultats sauvegardés → {csv_path}")
 
