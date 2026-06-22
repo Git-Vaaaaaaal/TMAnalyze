@@ -4,14 +4,14 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.metrics import concordance_index_censored
 from sksurv.nonparametric import kaplan_meier_estimator
 from sklearn.utils import resample
-
+from sklearn.model_selection import StratifiedKFold
 
 marker_list  = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
 encoder_list = ["prism", "feather"]
@@ -89,6 +89,8 @@ os.makedirs("out_rfs", exist_ok=True)
 log_path = "logs_rf_survival.txt"
 results  = []
 
+parameters_df = pd.read_csv("out_rfs/results.csv")
+
 COLORS = {"OS": "steelblue", "PFS": "tomato"}
 
 for marker in marker_list:
@@ -96,12 +98,14 @@ for marker in marker_list:
         enc          = ENCODER_CFG[encoder]
         features_csv = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
 
+        df_marker = parameters_df[(parameters_df["marker"] == marker) & (parameters_df["encoder"] == encoder)]
+
         parameters = {
-            'n_estimators': [100, 200],
-            'max_depth': [None, 5, 10],
-            'min_samples_split': [2, 5],
-            'min_samples_leaf': [1, 2, 4],
-            'max_features': ['sqrt', 'log2', None],
+            'n_estimators': df_marker["best_n_estimators"].iloc[0],
+            'max_depth': df_marker["best_max_depth"].iloc[0] if not pd.isna(df_marker["best_max_depth"].iloc[0]) else None,
+            'min_samples_split': df_marker["best_min_samples_split"].iloc[0],
+            'min_samples_leaf': df_marker["best_min_samples_leaf"].iloc[0],
+            'max_features': df_marker["best_max_features"].iloc[0] if not pd.isna(df_marker["best_max_features"].iloc[0]) else None,
         }
 
         km_data = {}  # stocke les courbes KM pour OS et PFS
@@ -116,63 +120,69 @@ for marker in marker_list:
                 print(f"[SKIP] {marker}/{encoder}/{element_time} — erreur chargement : {e}")
                 continue
 
-            X_train, X_val, y_train, y_val, _, _ = train_test_split(
-                X, y, patient_ids, test_size=0.2, random_state=42
-            )
+            skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=1)
+            lst_accu_stratified = []
 
-            print(f"  [{element_time}] Train : {len(y_train)} patients  |  Val : {len(y_val)} patients")
+            for train_index, test_index in skf.split(X, y):
+                X_train_fold, X_test_fold = X[train_index], X[test_index]
+                y_train_fold, y_test_fold = y[train_index], y[test_index]
+                
 
-            scaler     = StandardScaler()
-            X_train_sc = scaler.fit_transform(X_train)
-            X_val_sc   = scaler.transform(X_val)
 
-            model = RandomSurvivalForest(n_estimators=200, random_state=42, n_jobs=-1)
-            clf   = GridSearchCV(model, parameters, cv=5, scoring=rsf_concordance_score)
-            clf.fit(X_train_sc, y_train)
+                print(f"  [{element_time}] Train : {len(y_train_fold)} patients  |  Val : {len(y_test_fold)} patients")
 
-            c_index = clf.score(X_val_sc, y_val)
-            print(f"  [{element_time}] C-index : {c_index:.4f}  best: {clf.best_params_}")
-            with open(log_path, "a") as f:
-                f.write(f"{element_time}, {marker},{encoder} | {clf.best_params_}\n")
-                f.write(f"{element_time}, {marker},{encoder},c_index={c_index:.4f}\n")
+                scaler     = StandardScaler()
+                X_train_sc = scaler.fit_transform(X_train_fold)
+                X_val_sc   = scaler.transform(X_test_fold)
 
-            results.append({
-                "element_time": element_time, "marker": marker, "encoder": encoder,
-                "c_index":      round(c_index, 4),
-                "n_train":      len(y_train), "n_val": len(y_val),
-                "events_train": int(y_train["event"].sum()),
-                "events_val":   int(y_val["event"].sum()),
-                **{f"best_{k}": v for k, v in clf.best_params_.items()},
-            })
+                model = RandomSurvivalForest(n_estimators=parameters["n_estimators"], max_depth=parameters["max_depth"], min_samples_split=parameters["min_samples_split"], min_samples_leaf=parameters["min_samples_leaf"], max_features=parameters["max_features"], random_state=42, n_jobs=-1)
+                model.fit(X_train_sc, y_train_fold)
 
-            km_times, km_surv = kaplan_meier_estimator(y_val["event"], y_val["time"])
-            censored_times    = y_val["time"][~y_val["event"].astype(bool)]
-            km_data[element_time] = {
-                "times": km_times, "surv": km_surv,
-                "censored_times": censored_times, "c_index": c_index,
-            }
+                lst_accu_stratified.append(model.score(X_test_fold, y_test_fold))
 
-        # --- Graphe combiné OS + PFS ---
-        if km_data:
-            fig, ax = plt.subplots(figsize=(8, 5))
-            for et, data in km_data.items():
-                color = COLORS[et]
-                ax.step(data["times"], data["surv"], where="post",
-                        label=f"KM {et}  (C={data['c_index']:.3f})", color=color)
-                # Croix pour les patients censurés
-                for ct in data["censored_times"]:
-                    idx     = max(np.searchsorted(data["times"], ct, side="right") - 1, 0)
-                    surv_ct = data["surv"][idx]
-                    ax.plot(ct, surv_ct, "+", color=color, markersize=7, markeredgewidth=1.5)
-            ax.set_ylabel("Probabilité de survie")
-            ax.set_xlabel("Temps (années)")
-            ax.set_title(f"{encoder} | {marker}")
-            ax.legend()
-            ax.grid(True)
-            fig.savefig(f"out_rfs/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
-            plt.close(fig)
+                c_index = model.score(X_val_sc, y_test_fold)
+                print(f"  [{element_time}] C-index : {c_index:.4f}")
+                with open(log_path, "a") as f:
+                    f.write(f"{element_time}, {marker},{encoder} | {model.best_params_}\n")
+                    f.write(f"{element_time}, {marker},{encoder},c_index={c_index:.4f}\n")
 
-csv_path = "out_rfs/results.csv"
+                results.append({
+                    "element_time": element_time, "marker": marker, "encoder": encoder,
+                    "c_index":      round(c_index, 4),
+                    "n_train":      len(y_train_fold), "n_val": len(y_test_fold),
+                    "events_train": int(y_train_fold["event"].sum()),
+                    "events_val":   int(y_test_fold["event"].sum()),
+                    **{f"best_{k}": v for k, v in model.best_params_.items()},
+                })
+
+                km_times, km_surv = kaplan_meier_estimator(y_test_fold["event"], y_test_fold["time"])
+                censored_times    = y_test_fold["time"][~y_test_fold["event"].astype(bool)]
+                km_data[element_time] = {
+                    "times": km_times, "surv": km_surv,
+                    "censored_times": censored_times, "c_index": c_index,
+                }
+
+            # --- Graphe combiné OS + PFS ---
+            if km_data:
+                fig, ax = plt.subplots(figsize=(8, 5))
+                for et, data in km_data.items():
+                    color = COLORS[et]
+                    ax.step(data["times"], data["surv"], where="post",
+                            label=f"KM {et}  (C={data['c_index']:.3f})", color=color)
+                    # Croix pour les patients censurés
+                    for ct in data["censored_times"]:
+                        idx     = max(np.searchsorted(data["times"], ct, side="right") - 1, 0)
+                        surv_ct = data["surv"][idx]
+                        ax.plot(ct, surv_ct, "+", color=color, markersize=7, markeredgewidth=1.5)
+                ax.set_ylabel("Probabilité de survie")
+                ax.set_xlabel("Temps (années)")
+                ax.set_title(f"{encoder} | {marker}")
+                ax.legend()
+                ax.grid(True)
+                fig.savefig(f"out_rfs/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
+                plt.close(fig)
+
+csv_path = "out_rfs/results_kfold.csv"
 pd.DataFrame(results).to_csv(csv_path, index=False)
 print(f"\nRésultats sauvegardés → {csv_path}")
 
