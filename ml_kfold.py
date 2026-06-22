@@ -85,7 +85,7 @@ def rsf_concordance_score(estimator, X, y):
 # ---------------------------------------------------------------------------
 
 os.makedirs("output_classical", exist_ok=True)
-os.makedirs("out_rfs", exist_ok=True)
+os.makedirs("out_rfs_kfold", exist_ok=True)
 log_path = "logs_rf_survival.txt"
 results  = []
 
@@ -102,7 +102,7 @@ for marker in marker_list:
 
         parameters = {
             'n_estimators': df_marker["best_n_estimators"].iloc[0],
-            'max_depth': df_marker["best_max_depth"].iloc[0] if not pd.isna(df_marker["best_max_depth"].iloc[0]) else None,
+            'max_depth': int(df_marker["best_max_depth"].iloc[0]) if not pd.isna(df_marker["best_max_depth"].iloc[0]) else None,
             'min_samples_split': df_marker["best_min_samples_split"].iloc[0],
             'min_samples_leaf': df_marker["best_min_samples_leaf"].iloc[0],
             'max_features': df_marker["best_max_features"].iloc[0] if not pd.isna(df_marker["best_max_features"].iloc[0]) else None,
@@ -120,7 +120,7 @@ for marker in marker_list:
                 print(f"[SKIP] {marker}/{encoder}/{element_time} — erreur chargement : {e}")
                 continue
 
-            skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=1)
+            skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=1)
             lst_accu_stratified = []
 
             for train_index, test_index in skf.split(X, y):
@@ -143,7 +143,6 @@ for marker in marker_list:
                 c_index = model.score(X_val_sc, y_test_fold)
                 print(f"  [{element_time}] C-index : {c_index:.4f}")
                 with open(log_path, "a") as f:
-                    f.write(f"{element_time}, {marker},{encoder} | {model.best_params_}\n")
                     f.write(f"{element_time}, {marker},{encoder},c_index={c_index:.4f}\n")
 
                 results.append({
@@ -152,7 +151,6 @@ for marker in marker_list:
                     "n_train":      len(y_train_fold), "n_val": len(y_test_fold),
                     "events_train": int(y_train_fold["event"].sum()),
                     "events_val":   int(y_test_fold["event"].sum()),
-                    **{f"best_{k}": v for k, v in model.best_params_.items()},
                 })
 
                 km_times, km_surv = kaplan_meier_estimator(y_test_fold["event"], y_test_fold["time"])
@@ -179,10 +177,10 @@ for marker in marker_list:
                 ax.set_title(f"{encoder} | {marker}")
                 ax.legend()
                 ax.grid(True)
-                fig.savefig(f"out_rfs/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
+                fig.savefig(f"out_rfs_kfold/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
                 plt.close(fig)
 
-csv_path = "out_rfs/results_kfold.csv"
+csv_path = "out_rfs_kfold/results_kfold.csv"
 pd.DataFrame(results).to_csv(csv_path, index=False)
 print(f"\nRésultats sauvegardés → {csv_path}")
 
