@@ -144,7 +144,7 @@ log_path = "output_logs_classical.txt"
 for marker in marker_list:
     for encoder in encoder_list:
         enc          = ENCODER_CFG[encoder]
-        features_csv = os.path.join("export", "export", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
+        features_csv = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
 
         if not os.path.exists(features_csv):
             print(f"[SKIP] Fichier manquant : {features_csv}")
