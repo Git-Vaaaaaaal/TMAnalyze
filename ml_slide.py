@@ -97,10 +97,10 @@ for marker in marker_list:
         features_csv = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
 
         parameters = {
-            'n_estimators': [100, 200],
-            'max_depth': [None, 5, 10],
-            'min_samples_split': [2, 5],
-            'min_samples_leaf': [1, 2, 4],
+            'n_estimators': [100, 200, 300, 500],
+            'max_depth': [None, 5, 10, 20, 50],
+            'min_samples_split': [2, 5, 10, 20],
+            'min_samples_leaf': [1, 2, 4, 10],
             'max_features': ['sqrt', 'log2', None],
         }
 
