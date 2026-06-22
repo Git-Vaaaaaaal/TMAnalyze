@@ -138,9 +138,9 @@ for marker in marker_list:
             print(f"  [{element_time}] PCA : {X_train.shape[1]} → {n_comp} composantes ({var_exp*100:.1f}% variance)")
 
             model = RandomSurvivalForest(n_estimators=parameters["n_estimators"], max_depth=parameters["max_depth"], min_samples_split=parameters["min_samples_split"], min_samples_leaf=parameters["min_samples_leaf"], max_features=parameters["max_features"], random_state=42, n_jobs=-1)
-            model.fit(X_train_sc, y_train)
+            pca.fit(X_train_sc, y_train)
 
-            c_index = model.score(X_val_sc, y_val)
+            c_index = pca.score(X_val_sc, y_val)
             with open(log_path, "a") as f:
                 f.write(f"{element_time}, {marker},{encoder},c_index={c_index:.4f}\n")
 
