@@ -35,7 +35,7 @@ def cleaning_csv(df_path, marker, element_time, element_event, os_bool):
     df = df.dropna(subset=[element_time, element_event])
     df[element_event] = df[element_event].astype(int)   # 1 = événement, 0 = censuré
     df[element_time]  = df[element_time].astype(float)
-    if os_bool:
+    if os_bool == True:
         mask = df[element_time] > 5.0
         df.loc[mask, element_event] = 0
         df.loc[mask, element_event] = 5.0
@@ -111,7 +111,10 @@ for marker in marker_list:
         km_data = {}  # stocke les courbes KM pour OS et PFS
 
         for element_time in ["OS", "PFS"]:
-            os_bool  = (element_time == "OS")
+            if element_time == "OS":
+                os_bool = True
+            else:
+                os_bool = False
             labels_df = cleaning_csv(dataframe_id, marker, element_time, element_event, os_bool)
 
             try:
