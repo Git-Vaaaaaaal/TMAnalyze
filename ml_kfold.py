@@ -170,6 +170,7 @@ for marker in marker_list:
                     idx     = max(np.searchsorted(data["times"], ct, side="right") - 1, 0)
                     surv_ct = data["surv"][idx]
                     ax.plot(ct, surv_ct, "+", color=color, markersize=7, markeredgewidth=1.5)
+            ax.set_ylim(0, 1)
             ax.set_ylabel("Probabilité de survie")
             ax.set_xlabel("Temps (années)")
             ax.set_title(f"{encoder} | {marker}")

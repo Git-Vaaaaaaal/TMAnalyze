@@ -60,7 +60,7 @@ def plot_combined_km(df_os, df_pfs, os_time, pfs_time, event_col,
     ax.set_title(f"Kaplan-Meier OS + PFS — {marker}", fontsize=13)
     ax.set_xlabel("Temps (années)", fontsize=11)
     ax.set_ylabel("Probabilité de survie", fontsize=11)
-    ax.set_ylim(0, 1.05)
+    ax.set_ylim(0, 1)
     ax.legend(fontsize=10, loc="upper right")
     ax.grid(True, alpha=0.3)
 
