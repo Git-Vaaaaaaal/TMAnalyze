@@ -6,12 +6,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
 from sksurv.ensemble import RandomSurvivalForest
 from sksurv.metrics import concordance_index_censored
 from sksurv.nonparametric import kaplan_meier_estimator
 from sklearn.utils import resample
-from sklearn.model_selection import StratifiedKFold
 
 marker_list  = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
 encoder_list = ["prism", "feather"]
@@ -119,45 +117,63 @@ for marker in marker_list:
                 print(f"[SKIP] {marker}/{encoder}/{element_time} — erreur chargement : {e}")
                 continue
 
+            # --- Découpe test set 20% (stratifié sur l'événement) ---
+            X_dev, X_test, y_dev, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42, stratify=y["event"]
+            )
+
             skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=1)
-            lst_accu_stratified = []
+            best_c_val  = -1.0
+            best_model  = None
+            best_scaler = None
 
-            for train_index, test_index in skf.split(X, y):
-                X_train_fold, X_test_fold = X[train_index], X[test_index]
-                y_train_fold, y_test_fold = y[train_index], y[test_index]
-                
+            for train_index, val_index in skf.split(X_dev, y_dev["event"]):
+                X_train_fold, X_val_fold = X_dev[train_index], X_dev[val_index]
+                y_train_fold, y_val_fold = y_dev[train_index], y_dev[val_index]
 
-
-                print(f"  [{element_time}] Train : {len(y_train_fold)} patients  |  Val : {len(y_test_fold)} patients")
+                print(f"  [{element_time}] Train : {len(y_train_fold)}  |  Val : {len(y_val_fold)}  |  Test : {len(y_test)}")
 
                 scaler     = StandardScaler()
                 X_train_sc = scaler.fit_transform(X_train_fold)
-                X_val_sc   = scaler.transform(X_test_fold)
+                X_val_sc   = scaler.transform(X_val_fold)
 
-                model = RandomSurvivalForest(n_estimators=parameters["n_estimators"], max_depth=parameters["max_depth"], min_samples_split=parameters["min_samples_split"], min_samples_leaf=parameters["min_samples_leaf"], max_features=parameters["max_features"], random_state=42, n_jobs=-1)
+                model = RandomSurvivalForest(
+                    n_estimators=parameters["n_estimators"], max_depth=parameters["max_depth"],
+                    min_samples_split=parameters["min_samples_split"], min_samples_leaf=parameters["min_samples_leaf"],
+                    max_features=parameters["max_features"], random_state=42, n_jobs=-1,
+                )
                 model.fit(X_train_sc, y_train_fold)
 
-                lst_accu_stratified.append(model.score(X_test_fold, y_test_fold))
+                c_index_val = model.score(X_val_sc, y_val_fold)
+                print(f"  [{element_time}] C-index val : {c_index_val:.4f}")
 
-                c_index = model.score(X_val_sc, y_test_fold)
-                print(f"  [{element_time}] C-index : {c_index:.4f}")
-                with open(log_path, "a") as f:
-                    f.write(f"{element_time}, {marker},{encoder},c_index={c_index:.4f}\n")
+                if c_index_val > best_c_val:
+                    best_c_val  = c_index_val
+                    best_model  = model
+                    best_scaler = scaler
 
-                results.append({
-                    "element_time": element_time, "marker": marker, "encoder": encoder,
-                    "c_index":      round(c_index, 4),
-                    "n_train":      len(y_train_fold), "n_val": len(y_test_fold),
-                    "events_train": int(y_train_fold["event"].sum()),
-                    "events_val":   int(y_test_fold["event"].sum()),
-                })
+            # --- Évaluation finale sur le test set avec le meilleur modèle ---
+            X_test_sc    = best_scaler.transform(X_test)
+            c_index_test = best_model.score(X_test_sc, y_test)
+            print(f"  [{element_time}] C-index TEST : {c_index_test:.4f}")
+            with open(log_path, "a") as f:
+                f.write(f"{element_time},{marker},{encoder},c_index_val={best_c_val:.4f},c_index_test={c_index_test:.4f}\n")
 
-                km_times, km_surv = kaplan_meier_estimator(y_test_fold["event"], y_test_fold["time"])
-                censored_times    = y_test_fold["time"][~y_test_fold["event"].astype(bool)]
-                km_data[element_time] = {
-                    "times": km_times, "surv": km_surv,
-                    "censored_times": censored_times, "c_index": c_index,
-                }
+            results.append({
+                "element_time":  element_time, "marker": marker, "encoder": encoder,
+                "c_index_val":   round(best_c_val, 4),
+                "c_index_test":  round(c_index_test, 4),
+                "n_dev":         len(y_dev), "n_test": len(y_test),
+                "events_dev":    int(y_dev["event"].sum()),
+                "events_test":   int(y_test["event"].sum()),
+            })
+
+            km_times, km_surv = kaplan_meier_estimator(y_test["event"], y_test["time"])
+            censored_times    = y_test["time"][~y_test["event"].astype(bool)]
+            km_data[element_time] = {
+                "times": km_times, "surv": km_surv,
+                "censored_times": censored_times, "c_index": c_index_test,
+            }
 
         # --- Graphe combiné OS + PFS ---
         if km_data:
