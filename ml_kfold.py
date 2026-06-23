@@ -38,7 +38,7 @@ def cleaning_csv(df_path, marker, element_time, element_event, os_bool):
     if os_bool == True:
         mask = df[element_time] > 5.0
         df.loc[mask, element_event] = 0
-        df.loc[mask, element_event] = 5.0
+        df.loc[mask, element_time] = 5.0
     return df
 
 
@@ -163,25 +163,24 @@ for marker in marker_list:
                     "censored_times": censored_times, "c_index": c_index,
                 }
 
-            # --- Graphe combiné OS + PFS ---
-            if km_data:
-                fig, ax = plt.subplots(figsize=(8, 5))
-                for et, data in km_data.items():
-                    color = COLORS[et]
-                    ax.step(data["times"], data["surv"], where="post",
-                            label=f"KM {et}  (C={data['c_index']:.3f})", color=color)
-                    # Croix pour les patients censurés
-                    for ct in data["censored_times"]:
-                        idx     = max(np.searchsorted(data["times"], ct, side="right") - 1, 0)
-                        surv_ct = data["surv"][idx]
-                        ax.plot(ct, surv_ct, "+", color=color, markersize=7, markeredgewidth=1.5)
-                ax.set_ylabel("Probabilité de survie")
-                ax.set_xlabel("Temps (années)")
-                ax.set_title(f"{encoder} | {marker}")
-                ax.legend()
-                ax.grid(True)
-                fig.savefig(f"out_rfs_kfold/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
-                plt.close(fig)
+        # --- Graphe combiné OS + PFS ---
+        if km_data:
+            fig, ax = plt.subplots(figsize=(8, 5))
+            for et, data in km_data.items():
+                color = COLORS[et]
+                ax.step(data["times"], data["surv"], where="post",
+                        label=f"KM {et}  (C={data['c_index']:.3f})", color=color)
+                for ct in data["censored_times"]:
+                    idx     = max(np.searchsorted(data["times"], ct, side="right") - 1, 0)
+                    surv_ct = data["surv"][idx]
+                    ax.plot(ct, surv_ct, "+", color=color, markersize=7, markeredgewidth=1.5)
+            ax.set_ylabel("Probabilité de survie")
+            ax.set_xlabel("Temps (années)")
+            ax.set_title(f"{encoder} | {marker}")
+            ax.legend()
+            ax.grid(True)
+            fig.savefig(f"out_rfs_kfold/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
+            plt.close(fig)
 
 csv_path = "out_rfs_kfold/results_kfold.csv"
 pd.DataFrame(results).to_csv(csv_path, index=False)
