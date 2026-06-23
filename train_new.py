@@ -111,7 +111,7 @@ if torch.cuda.is_available():
 
 for idx, (encoder, marker, mil, status) in my_combinations:
     enc       = ENCODER_CFG[encoder]
-    run_dir   = os.path.join("output_ipi", encoder, marker, mil, status)
+    run_dir   = os.path.join("output_ipi_v2", encoder, marker, mil, status)
     run_label = f"{status} | {encoder} | {mil} | {marker}"
     os.makedirs(run_dir, exist_ok=True)
 
@@ -146,7 +146,8 @@ for idx, (encoder, marker, mil, status) in my_combinations:
         lr                 = 1e-4,
         epochs             = 80,
         batch_size         = 256,
-        val_split          = 0.3,
+        val_split          = 0.2,
+        test_split         = 0.2,
         device             = str(device),
         output_dir         = run_dir,
         seed               = 42,
@@ -161,16 +162,16 @@ for idx, (encoder, marker, mil, status) in my_combinations:
 
     torch.manual_seed(CFG["seed"])
 
-    train_loader, val_loader          = build_dataloaders(CFG)
+    train_loader, val_loader, test_loader = build_dataloaders(CFG)
     model, optimizer, scheduler       = build_model(CFG)
     history, best_epoch, best_val_auc = train(
         CFG, model, optimizer, scheduler, train_loader, val_loader,
         run_label, os.path.join(run_dir, "training_log.txt"),
     )
-    final_tracker = evaluate(CFG, model, val_loader, optimizer)
+    final_tracker = evaluate(CFG, model, test_loader, optimizer)
 
     plot_dashboard(history, best_epoch, final_tracker, os.path.join(run_dir, "dashboard.png"))
-    generate_heatmaps(CFG, model)
+    #generate_heatmaps(CFG, model)
 
 
 

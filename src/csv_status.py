@@ -51,7 +51,7 @@ def cleaning_csv(df_path, marker, encoder, element):
     df_label = df_label[["patient_id", element]].rename(columns={element: "Status"})
     df_label["Status"] = df_label["Status"].replace("", np.nan)
     df_label = df_label.dropna(subset=["Status"])
-    df_label = binarize_column(df_label, "Status", group_0=[0.0], group_1=[1.0, 2.0])
+    df_label = binarize_column(df_label, "Status", group_0=[0.0, 1.0], group_1=[2.0, 3.0]) #a changer pour correspondre au label
     df_label = df_label[df_label["Status"].astype(str).str.strip() != ""]
     df_label["Status"] = pd.factorize(df_label["Status"])[0]
     out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")

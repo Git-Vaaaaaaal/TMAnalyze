@@ -44,18 +44,23 @@ def build_dataloaders(cfg):
     for i, label in enumerate(labels):
         class_indices[label].append(i)
 
-    train_indices, val_indices = [], []
+    test_split = cfg.get("test_split", 0.0)
+    train_indices, val_indices, test_indices = [], [], []
     for _, idxs in class_indices.items():
         idxs = np.array(idxs)
         rng.shuffle(idxs)
-        n_val = max(1, int(len(idxs) * cfg["val_split"]))
-        val_indices.extend(idxs[:n_val].tolist())
-        train_indices.extend(idxs[n_val:].tolist())
+        n_test = max(1, int(len(idxs) * test_split)) if test_split > 0 else 0
+        test_indices.extend(idxs[:n_test].tolist())
+        remaining = idxs[n_test:]
+        n_val = max(1, int(len(remaining) * cfg["val_split"]))
+        val_indices.extend(remaining[:n_val].tolist())
+        train_indices.extend(remaining[n_val:].tolist())
 
     train_ds = dataset.subset(train_indices)
     val_ds   = dataset.subset(val_indices)
+    test_ds  = dataset.subset(test_indices)
 
-    # WeightedRandomSampler : surech antillonne la classe minoritaire à l'entraînement
+    # WeightedRandomSampler : suréchantillonne la classe minoritaire à l'entraînement
     train_labels  = labels[train_indices]
     class_counts  = np.bincount(train_labels)
     sample_weights = 1.0 / class_counts[train_labels]
@@ -67,9 +72,11 @@ def build_dataloaders(cfg):
 
     train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], sampler=sampler, collate_fn=collate_fn)
     val_loader   = DataLoader(val_ds,   batch_size=cfg["batch_size"], shuffle=False,   collate_fn=collate_fn)
+    test_loader  = DataLoader(test_ds,  batch_size=cfg["batch_size"], shuffle=False,   collate_fn=collate_fn)
 
-    print(f"Dataset — train: {len(train_ds)} (cls0: {(train_labels==0).sum()}, cls1: {(train_labels==1).sum()}) | val: {len(val_ds)}")
-    return train_loader, val_loader
+    print(f"Dataset — train: {len(train_ds)} (cls0: {(train_labels==0).sum()}, cls1: {(train_labels==1).sum()}) "
+          f"| val: {len(val_ds)} | test: {len(test_ds)}")
+    return train_loader, val_loader, test_loader
 
 
 def _replace_head(model, mil_name, n_classes):
