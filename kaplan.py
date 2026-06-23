@@ -5,54 +5,39 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sksurv.nonparametric import kaplan_meier_estimator
-from sksurv.compare import compare_survival
 
 
 # ── Configuration ──────────────────────────────────────────────────────────
-CSV_PATH      = r"csv/clinical_data_cleaned.csv"
-OS_TIME_COL   = "OS"
-OS_EVENT_COL  = "Follow-up Status"
-PFS_TIME_COL  = "PFS"
-PFS_EVENT_COL = "Follow-up Status"   # adapter si colonne différente pour PFS
-GROUP_COL     = None        # colonne de stratification (None = courbe globale)
-INVERT_EVENT  = False
-OUTPUT_DIR    = "out_kaplan"
-CAP_YEARS     = 5.0         # patients OS > 5 ans → censurés à 5 ans
+CSV_PATH    = r"csv/multi_label_patient_id.csv"
+EVENT_COL   = "status"
+MARKER_LIST = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
+OUTPUT_DIR  = "out_kaplan"
+CAP_YEARS   = 5.0
 # ───────────────────────────────────────────────────────────────────────────
 
 COLORS = {"OS": "steelblue", "PFS": "tomato"}
 
 
-def apply_cap(df, time_col, event_col, cap=5.0):
+def load_marker_data(df_all, marker, time_col, event_col, cap=None):
+    df = df_all[df_all["stain"] == marker][["patient_id", time_col, event_col]].dropna()
     df = df.copy()
-    mask = df[time_col] > cap
-    df.loc[mask, event_col] = 0
-    df.loc[mask, time_col]  = cap
-    return df
-
-
-def load_survival_data(csv_path, time_col, event_col, group_col=None, invert_event=False):
-    df = pd.read_csv(csv_path)
-    required = [time_col, event_col] + ([group_col] if group_col else [])
-    for col in required:
-        if col not in df.columns:
-            raise ValueError(f"Colonne '{col}' introuvable. Disponibles : {df.columns.tolist()}")
-    df = df[required].dropna()
     df[event_col] = df[event_col].astype(int)
-    if invert_event:
-        df[event_col] = 1 - df[event_col]
-    df[time_col] = df[time_col].astype(float)
+    df[time_col]  = df[time_col].astype(float)
     df = df[df[time_col] >= 0]
+    if cap is not None:
+        mask = df[time_col] > cap
+        df.loc[mask, event_col] = 0
+        df.loc[mask, time_col]  = cap
     return df
 
 
-def plot_combined_km(df_os, df_pfs, os_time, os_event, pfs_time, pfs_event,
-                     population_label="Global", output_path="km.png"):
+def plot_combined_km(df_os, df_pfs, os_time, pfs_time, event_col,
+                     marker, output_path):
     fig, ax = plt.subplots(figsize=(9, 6))
 
-    for endpoint, df, time_col, event_col in [
-        ("OS",  df_os,  os_time,  os_event),
-        ("PFS", df_pfs, pfs_time, pfs_event),
+    for endpoint, df, time_col in [
+        ("OS",  df_os,  os_time),
+        ("PFS", df_pfs, pfs_time),
     ]:
         color  = COLORS[endpoint]
         n      = len(df)
@@ -72,47 +57,34 @@ def plot_combined_km(df_os, df_pfs, os_time, os_event, pfs_time, pfs_event,
             idx = max(np.searchsorted(times, ct, side="right") - 1, 0)
             ax.plot(ct, surv[idx], "|", color=color, markersize=9, markeredgewidth=1.5)
 
-    ax.set_title(f"Kaplan-Meier OS + PFS — {population_label}", fontsize=13)
+    ax.set_title(f"Kaplan-Meier OS + PFS — {marker}", fontsize=13)
     ax.set_xlabel("Temps (années)", fontsize=11)
     ax.set_ylabel("Probabilité de survie", fontsize=11)
     ax.set_ylim(0, 1.05)
     ax.legend(fontsize=10, loc="upper right")
     ax.grid(True, alpha=0.3)
 
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     fig.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"Courbe sauvegardée → {output_path}")
+    print(f"  → {output_path}")
 
 
 # ── Main ───────────────────────────────────────────────────────────────────
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+df_all = pd.read_csv(CSV_PATH)
 
-# Chargement + cap 5 ans pour l'OS
-df_os  = load_survival_data(CSV_PATH, OS_TIME_COL, OS_EVENT_COL, GROUP_COL, INVERT_EVENT)
-df_os  = apply_cap(df_os, OS_TIME_COL, OS_EVENT_COL, cap=CAP_YEARS)
+for marker in MARKER_LIST:
+    df_os  = load_marker_data(df_all, marker, "OS",  EVENT_COL, cap=CAP_YEARS)
+    df_pfs = load_marker_data(df_all, marker, "PFS", EVENT_COL, cap=None)
 
-# Chargement PFS (pas de cap)
-df_pfs = load_survival_data(CSV_PATH, PFS_TIME_COL, PFS_EVENT_COL, GROUP_COL, INVERT_EVENT)
+    print(f"{marker} — OS: N={len(df_os)}, events={df_os[EVENT_COL].sum()} "
+          f"| PFS: N={len(df_pfs)}, events={df_pfs[EVENT_COL].sum()}")
 
-print(f"OS  — N={len(df_os)}  | événements : {df_os[OS_EVENT_COL].sum()}")
-print(f"PFS — N={len(df_pfs)} | événements : {df_pfs[PFS_EVENT_COL].sum()}")
+    plot_combined_km(
+        df_os, df_pfs, "OS", "PFS", EVENT_COL,
+        marker=marker,
+        output_path=os.path.join(OUTPUT_DIR, f"km_{marker}.png"),
+    )
 
-# Graphe global
-plot_combined_km(
-    df_os, df_pfs, OS_TIME_COL, OS_EVENT_COL, PFS_TIME_COL, PFS_EVENT_COL,
-    population_label="Global",
-    output_path=os.path.join(OUTPUT_DIR, "km_combined_global.png"),
-)
-
-# Graphes par groupe si GROUP_COL défini
-if GROUP_COL:
-    for group_val in sorted(df_os[GROUP_COL].dropna().unique()):
-        sub_os  = df_os[df_os[GROUP_COL] == group_val]
-        sub_pfs = df_pfs[df_pfs[GROUP_COL] == group_val]
-        plot_combined_km(
-            sub_os, sub_pfs, OS_TIME_COL, OS_EVENT_COL, PFS_TIME_COL, PFS_EVENT_COL,
-            population_label=str(group_val),
-            output_path=os.path.join(OUTPUT_DIR, f"km_combined_{GROUP_COL}_{group_val}.png"),
-        )
+print(f"\nTerminé. Graphes dans {OUTPUT_DIR}/")
