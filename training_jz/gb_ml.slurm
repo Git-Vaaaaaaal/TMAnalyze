@@ -1,3 +1,4 @@
+#!/bin/bash
 #SBATCH --job-name=gb_ml        # Nom du job
 #SBATCH --nodes=1
 #SBATCH --ntasks=4                 # Nombre total de processus MPI
