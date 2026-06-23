@@ -76,7 +76,7 @@ df_all = pd.read_csv(CSV_PATH)
 
 for marker in MARKER_LIST:
     df_os  = load_marker_data(df_all, marker, "OS",  EVENT_COL, cap=CAP_YEARS)
-    df_pfs = load_marker_data(df_all, marker, "PFS", EVENT_COL, cap=None)
+    df_pfs = load_marker_data(df_all, marker, "PFS", EVENT_COL, cap=CAP_YEARS)
 
     print(f"{marker} — OS: N={len(df_os)}, events={df_os[EVENT_COL].sum()} "
           f"| PFS: N={len(df_pfs)}, events={df_pfs[EVENT_COL].sum()}")

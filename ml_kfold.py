@@ -111,11 +111,7 @@ for marker in marker_list:
         km_data = {}  # stocke les courbes KM pour OS et PFS
 
         for element_time in ["OS", "PFS"]:
-            if element_time == "OS":
-                os_bool = True
-            else:
-                os_bool = False
-            labels_df = cleaning_csv(dataframe_id, marker, element_time, element_event, os_bool)
+            labels_df = cleaning_csv(dataframe_id, marker, element_time, element_event, os_bool=True)
 
             try:
                 X, y, patient_ids = load_dataset(features_csv, labels_df, element_time, element_event)
