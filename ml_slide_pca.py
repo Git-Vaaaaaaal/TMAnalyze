@@ -85,7 +85,7 @@ def rsf_concordance_score(estimator, X, y):
 # ---------------------------------------------------------------------------
 
 os.makedirs("output_classical", exist_ok=True)
-os.makedirs("out_rfs", exist_ok=True)
+os.makedirs("out_rfs_pca", exist_ok=True)
 log_path = "logs_rf_survival.txt"
 results  = []
 
