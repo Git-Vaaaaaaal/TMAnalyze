@@ -54,7 +54,7 @@ def cleaning_csv(df_path, marker, encoder, element):
     df_label = binarize_column(df_label, "Status", group_0=[0.0, 1.0], group_1=[2.0, 3.0]) #a changer pour correspondre au label
     df_label = df_label[df_label["Status"].astype(str).str.strip() != ""]
     df_label["Status"] = pd.factorize(df_label["Status"])[0]
-    out_csv_marker = os.path.join("csv", f"{marker}_{encoder}.csv")
+    out_csv_marker = os.path.join("csv", f"{marker}_{encoder}_{element}.csv")
     df_label.to_csv(out_csv_marker, index=False)
     print(f"  [{element}] {len(df_label)} patients avec valeur valide")
     return out_csv_marker
