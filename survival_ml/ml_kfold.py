@@ -123,9 +123,10 @@ for marker in marker_list:
             )
 
             skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=1)
-            best_c_val  = -1.0
-            best_model  = None
-            best_scaler = None
+            best_c_val   = -1.0
+            best_c_train = -1.0
+            best_model   = None
+            best_scaler  = None
 
             for train_index, val_index in skf.split(X_dev, y_dev["event"]):
                 X_train_fold, X_val_fold = X_dev[train_index], X_dev[val_index]
@@ -144,24 +145,26 @@ for marker in marker_list:
                 )
                 model.fit(X_train_sc, y_train_fold)
 
-                c_index_val = model.score(X_val_sc, y_val_fold)
-                print(f"  [{element_time}] C-index val : {c_index_val:.4f}")
+                c_index_train = model.score(X_train_sc, y_train_fold)
+                c_index_val   = model.score(X_val_sc, y_val_fold)
+                print(f"  [{element_time}] C-index train : {c_index_train:.4f}  |  val : {c_index_val:.4f}")
 
                 if c_index_val > best_c_val:
-                    best_c_val  = c_index_val
-                    best_model  = model
-                    best_scaler = scaler
+                    best_c_val   = c_index_val
+                    best_c_train = c_index_train
+                    best_model   = model
+                    best_scaler  = scaler
 
             # --- Évaluation finale sur le test set avec le meilleur modèle ---
             X_test_sc    = best_scaler.transform(X_test)
             c_index_test = best_model.score(X_test_sc, y_test)
-            print(f"  [{element_time}] C-index TEST : {c_index_test:.4f}")
+            print(f"  [{element_time}] C-index TRAIN : {best_c_train:.4f}  |  TEST : {c_index_test:.4f}")
             with open(log_path, "a") as f:
-                f.write(f"{element_time},{marker},{encoder},c_index_val={best_c_val:.4f},c_index_test={c_index_test:.4f}\n")
+                f.write(f"{element_time},{marker},{encoder},c_index_train={best_c_train:.4f},c_index_test={c_index_test:.4f}\n")
 
             results.append({
                 "element_time":  element_time, "marker": marker, "encoder": encoder,
-                "c_index_val":   round(best_c_val, 4),
+                "c_index_train": round(best_c_train, 4),
                 "c_index_test":  round(c_index_test, 4),
                 "n_dev":         len(y_dev), "n_test": len(y_test),
                 "events_dev":    int(y_dev["event"].sum()),
