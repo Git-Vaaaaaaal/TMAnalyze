@@ -119,7 +119,7 @@ for marker in marker_list:
 
             # --- Découpe test set 20% (stratifié sur l'événement) ---
             X_dev, X_test, y_dev, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y["event"]
+                X, y, test_size=0.1, random_state=42, stratify=y["event"]
             )
 
             skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=1)
