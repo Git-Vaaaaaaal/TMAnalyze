@@ -13,7 +13,7 @@ from src.dataloader import build_dataloaders, build_model
 from src.evaluation import evaluate, generate_heatmaps
 from src.csv_status import cleaning_csv
 
-from sklearn.model_selection import KFold  # ou LeaveOneOut
+
 
 """
 dropped_column = ["patient_id", "old_patient_id", "stain", "Age", "Status", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
@@ -34,7 +34,7 @@ dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
 encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism", "titan", "feather"]
 
-mil_list = ["abmil", "dsmil", "clam", "transmil"] #"abmil", "dsmil", "clam",
+mil_list = ["abmil"] #"abmil", "dsmil", "clam",
 
 status_list = ["RIPI Risk Group"]
 
@@ -115,8 +115,11 @@ for idx, (encoder, marker, mil, status) in my_combinations:
     run_label = f"{status} | {encoder} | {mil} | {marker}"
     os.makedirs(run_dir, exist_ok=True)
 
-    out_csv_marker = cleaning_csv(dataframe_id, marker, encoder, status)
-    n_classes  = int(pd.read_csv(out_csv_marker)["Status"].nunique())
+    out_csv_marker, df_status = cleaning_csv(dataframe_id, marker, encoder, status)
+    if df_status.empty:
+        print(f"[SKIP] pas de patients valides pour {run_label}")
+        continue
+    n_classes  = int(df_status["Status"].nunique())
     type_class = "binary" if n_classes == 2 else "multi_class"
 
     tiles_dir = os.path.join("data_224", encoder, marker, enc["tiles_subdir"])
