@@ -6,3 +6,5 @@ OS, BCL2,feather | {'learning_rate': 0.05, 'max_depth': 4, 'min_samples_leaf': 1
 OS, BCL2,feather,c_index=0.6089
 PFS, BCL2,feather | {'learning_rate': 0.05, 'max_depth': 4, 'min_samples_leaf': 4, 'min_samples_split': 10, 'n_estimators': 300, 'subsample': 1.0}
 PFS, BCL2,feather,c_index=0.5417
+OS, BCL6,prism | {'learning_rate': 0.2, 'max_depth': 2, 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 200, 'subsample': 0.8}
+OS, BCL6,prism,c_index=0.4940
