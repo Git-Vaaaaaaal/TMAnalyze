@@ -19,7 +19,7 @@ slide_list = ["titan", "prism", "feather"]
 
 for marker in list_marker :
     for slide_encoder in list_slide_encoder :
-        path = os.path.join("data_224", f"{slide_encoder}")
+        path = os.path.join("data_224_reborn", f"{slide_encoder}")
         #Partie 1 : Embeddings
         job_dir = os.path.join(path, f"{marker}")
         wsi_source = os.path.join(path, f"{marker}", "wsi_source")
