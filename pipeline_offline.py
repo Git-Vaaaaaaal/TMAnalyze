@@ -13,7 +13,7 @@ os.environ["HUGGINGFACE_HUB_TOKEN"] = hf_token
 os.environ["HF_HUB_OFFLINE"]       = "1"
 
 list_marker = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"] #
-list_slide_encoder = ["prism", "feather"]# "hoptimus1" prism", "feather", "titan"]
+list_slide_encoder = ["musk", "gpfm",  "hibou_l", "openmidnight", "virchow2", "prism", "titan"]# "hoptimus1" prism", "feather", "titan"]
 slide_list = ["titan", "prism", "feather"]
 
 
@@ -26,7 +26,6 @@ for marker in list_marker :
         wsi_ext = [".tiff"]
         wsi_cache = "cache/"
         skip_errors = True
-        custom_mpp_keys = {}
         custom_list_of_wsis = None
         max_workers = None
         reader_type = None
@@ -45,10 +44,10 @@ for marker in list_marker :
                 wsi_ext=wsi_ext,
                 wsi_cache=wsi_cache,
                 skip_errors=skip_errors,
-                custom_mpp_keys=custom_mpp_keys,
                 custom_list_of_wsis=custom_list_of_wsis,
                 max_workers=max_workers,
                 search_nested=search_nested,
+                mpp=0.2535,
             )
 
         encoder_name = f"{slide_encoder}"

@@ -1,0 +1,133 @@
+===========================================================
+  RÉSUMÉ DE SITUATION — PROBLÈME MPP / MAGNIFICATION
+===========================================================
+Date : 2026-06-26
+
+-----------------------------------------------------------
+1. CONTEXTE
+-----------------------------------------------------------
+Le pipeline extrait des features de lames histologiques (WSI)
+en découpant des patches de 224 px à 40x de magnification,
+puis les encode avec des modèles (gpfm, virchow2, etc.).
+
+Les lames originales sont des fichiers .svs (Aperio), ex :
+  /home/imvia/Bureau/valentin/TA255.svs
+
+  - Magnification réelle : 40x
+  - MPP réel             : 0.2535 µm/px
+  - Dimensions level-0   : 49 774 × 29 429 px
+
+-----------------------------------------------------------
+2. LE PROBLÈME DÉCOUVERT
+-----------------------------------------------------------
+Les lames ont été découpées en TIFFs plus petits avant
+d'être passés dans le pipeline. Exemple :
+  data_224/gpfm/HE/wsi_source/26839.tiff
+
+  - Dimensions level-0   : 2 651 × 2 781 px  (crop du SVS)
+  - MPP dans les métadonnées TIFF : 0.0254 µm/px  ← FAUX
+  - MPP réel du contenu  : 0.2535 µm/px  (même résolution que le SVS)
+
+Le tag TIFF XResolution/YResolution n'a pas été mis à jour
+lors du découpage. La valeur encodée (394 477 px/cm) vient
+du scanner original et n'a pas été corrigée après redimensionnement.
+
+-----------------------------------------------------------
+3. CONSÉQUENCE SUR LE PIPELINE
+-----------------------------------------------------------
+La fonction _fetch_magnification() dans src/class_wsi.py
+détecte la magnification via le MPP :
+
+  mpp < 0.16  → 80x   ← cas actuel (mpp=0.0254 → détecté 80x)
+  mpp < 0.30  → 40x   ← ce qui devrait être détecté
+
+Avec src_mag=80 détecté et dst_mag=40 (cible pipeline) :
+
+  downsample      = 80 / 40 = 2
+  patch_size_src  = 224 × 2 = 448 px en espace level-0
+  step            = 448 px  (au lieu de 224 px attendu)
+
+Effets concrets :
+  a) ÉCHELLE INCORRECTE
+     - Le modèle reçoit une zone de 448×448 px redimensionnée en 224×224
+     - Cela correspond à 448 × 0.2535 = 113.6 µm de côté
+     - Au lieu de 224 × 0.2535 = 56.8 µm (40x correct)
+     - Le modèle voit du contenu à 20x équivalent alors qu'il attend 40x
+
+  b) COUVERTURE INSUFFISANTE
+     - Step=448 au lieu de 224 → 4× moins de patches extraits
+     - Environ 37 patches par TIFF au lieu de ~147
+     - ~75% du tissu non représenté dans les embeddings
+
+  c) FICHIER DE COORDONNÉES
+     - Les (x,y) vont jusqu'à ~2688 ce qui correspond bien
+       aux bords du TIFF (2651×2781), preuve que tout le TIFF
+       est scanné mais avec un pas trop grand.
+
+-----------------------------------------------------------
+4. RÉPONSES AUX QUESTIONS
+-----------------------------------------------------------
+
+Q1 : Faut-il redécouper les images ou peut-on corriger le MPP
+     à la volée pendant l'embedding ?
+
+  → PAS BESOIN DE REDÉCOUPER.
+    Le contenu pixel des TIFFs est correct (même résolution
+    physique que le SVS 40x). Seul le tag de métadonnée est faux.
+
+    Solution : passer mpp=0.2535 au constructeur WSI.
+    Dans la classe Processor (class_embedding.py), le paramètre
+    'mpp' est transmis au WSI si une colonne 'mpp' est présente
+    dans le CSV de liste de lames.
+
+    Méthode la plus simple : ajouter une colonne 'mpp' avec
+    valeur 0.2535 dans le CSV wsi_list utilisé par Processor.
+    Ou passer directement custom_mpp_keys / mpp dans le code.
+
+Q2 : Est-ce que cela a un impact significatif sur l'embedding ?
+
+  → OUI, IMPACT MAJEUR SUR DEUX POINTS :
+
+  1. QUALITÉ DES FEATURES
+     Les encodeurs patch (conch_v15, gpfm, etc.) sont entraînés
+     sur des patches à une magnification spécifique (généralement
+     20x ou 40x). Leur faire ingérer des patches à 20x équivalent
+     au lieu de 40x dégrade la qualité des représentations :
+     les structures cellulaires apparaissent à la mauvaise échelle,
+     ce qui sort de la distribution d'entraînement du modèle.
+
+  2. COUVERTURE DU TISSU
+     Avec seulement 25% des patches attendus, les slide embeddings
+     (TITAN, PRISM, etc.) travaillent sur une représentation très
+     partielle de la lame. Les agrégations MIL (ABMIL, DSMIL...)
+     s'appuient ensuite sur ces bags incomplets.
+
+  → Tous les embeddings déjà produits sont à recalculer après
+    correction du MPP.
+
+-----------------------------------------------------------
+5. CORRECTION À APPLIQUER
+-----------------------------------------------------------
+Dans pipeline.py, modifier le Processor pour forcer le MPP :
+
+  embedding = Processor(
+      job_dir=job_dir,
+      wsi_source=wsi_source,
+      wsi_ext=wsi_ext,
+      wsi_cache=wsi_cache,
+      skip_errors=skip_errors,
+      custom_mpp_keys=custom_mpp_keys,
+      custom_list_of_wsis=custom_list_of_wsis,
+      max_workers=max_workers,
+      search_nested=search_nested,
+      mpp=0.2535,          # ← AJOUTER CETTE LIGNE
+  )
+
+Vérifier que la classe Processor accepte bien un paramètre
+'mpp' unique (pas juste par WSI) ou adapter en conséquence.
+
+Alternatively : corriger les tags TIFF une fois pour toutes
+avec tifffile/exiftool pour éviter de dépendre d'un paramètre
+manuel à chaque lancement.
+
+===========================================================

@@ -95,13 +95,22 @@ for marker in marker_list:
         enc          = ENCODER_CFG[encoder]
         features_csv = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
 
-        parameters = {
+        """parameters = {
             'n_estimators':      [100, 200, 300],
             'learning_rate':     [0.05, 0.1, 0.2],
             'max_depth':         [2, 3, 4],
             'min_samples_split': [2, 5, 10],
             'min_samples_leaf':  [1, 2, 4],
             'subsample':         [0.8, 1.0],
+        }"""
+
+        parameters = {
+            'n_estimators':      [200, 300],
+            'learning_rate':     [0.1, 0.2],
+            'max_depth':         [2, 4],
+            'min_samples_split': [5, 10],
+            'min_samples_leaf':  [4],
+            'subsample':         [1.0],
         }
 
         km_data = {}  # stocke les courbes KM pour OS et PFS

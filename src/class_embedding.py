@@ -47,7 +47,8 @@ class Processor:
         custom_mpp_keys: Optional[List[str]] = None,
         custom_list_of_wsis: Optional[str] = None,
         max_workers: Optional[int] = None,
-        search_nested: bool = False, 
+        search_nested: bool = False,
+        mpp: Optional[float] = None,
     ) -> None:
         """
         The `Processor` class handles all preprocessing steps starting from whole-slide images (WSIs). 
@@ -130,6 +131,7 @@ class Processor:
         self.skip_errors = skip_errors
         self.custom_mpp_keys = custom_mpp_keys
         self.max_workers = max_workers
+        self.global_mpp = mpp
 
         # Validate extensions
         assert isinstance(self.wsi_ext, list), f'wsi_ext must be a list, got {type(self.wsi_ext)}'
@@ -176,7 +178,7 @@ class Processor:
                 name=name,
                 tissue_seg_path=tissue_seg_path,
                 custom_mpp_keys=self.custom_mpp_keys,
-                mpp=valid_mpps[wsi_idx] if valid_mpps is not None else None,
+                mpp=valid_mpps[wsi_idx] if valid_mpps is not None else self.global_mpp,
                 max_workers=self.max_workers,
                 lazy_init=True,
             )

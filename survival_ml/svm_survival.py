@@ -1,4 +1,4 @@
-%matplotlib inline
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -37,7 +37,7 @@ def cleaning_csv(df_path, marker, element_time, element_event, os_bool):
     if os_bool == True:
         mask = df[element_time] > 5.0
         df.loc[mask, element_event] = 0
-        df.loc[mask, element_event] = 5.0
+        df.loc[mask, element_time] = 5.0
     return df
 
 def load_dataset(features_csv, labels_df, element_time, element_event):
