@@ -52,7 +52,5 @@ for marker in list_marker :
             )
 
         encoder_name = f"{slide_encoder}"
-        if slide_encoder in slide_list :
-            running_slide_embedding(embedding, encoder_name, magnification, patch_size)
-        else :
-            running_patch_embedding(embedding, encoder_name, magnification, patch_size)
+
+        running_patch_embedding(embedding, encoder_name, magnification, patch_size)
