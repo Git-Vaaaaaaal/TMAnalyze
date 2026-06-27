@@ -10,14 +10,14 @@ from env import hf_token
 login(hf_token)
 
 list_marker = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"]
-list_slide_encoder = ["titan"]
+list_slide_encoder = ["prism",  "feather"]
 #list_slide_encoder = ["gpfm", "openmidnight", "virchow2", "prism", "feather"]# "hoptimus1" prism", "feather", "titan"]
-slide_list = ["titan"]
+slide_list = ["prism",  "feather"]
 
 
 for marker in list_marker :
     for slide_encoder in list_slide_encoder :
-        path = os.path.join("data_224", f"{slide_encoder}")
+        path = os.path.join("data_224_reborn", f"{slide_encoder}")
         #Partie 1 : Embeddings
         job_dir = os.path.join(path, f"{marker}")
         wsi_source = os.path.join(path, f"{marker}", "wsi_source")
