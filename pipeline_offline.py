@@ -13,7 +13,7 @@ os.environ["HUGGINGFACE_HUB_TOKEN"] = hf_token
 os.environ["HF_HUB_OFFLINE"]       = "1"
 os.environ["HF_HUB_CACHE"]         = "/lustre/fsn1/projects/rech/ehe/udq27fb/cache/huggingface/hub"
 
-list_marker = ["BCL2", "BCL6", "CD10", "HE", "MUM1", "MYC"] #
+list_marker = ["HE", "MUM1", "MYC"] #
 list_slide_encoder = ["musk", "gpfm",  "hibou_l", "openmidnight", "virchow2"]# "hoptimus1" prism", "feather", "titan"]
 slide_list = ["titan", "prism", "feather"]
 
