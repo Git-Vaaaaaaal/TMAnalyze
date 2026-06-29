@@ -28,10 +28,6 @@ sacremoses==0.1.1
 # Pathology / WSI models
 # =====================================================================
 tmax==0.1.4.4
-musk==1.0.0
-conch==0.1.0
-madeleine==0.0.1
-gigapath==0.1.0
 openslide-python==1.4.3
 openslide-bin==4.0.0.13
 
