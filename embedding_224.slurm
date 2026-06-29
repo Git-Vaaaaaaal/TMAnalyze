@@ -12,12 +12,10 @@
 #SBATCH --account=ehe@h100              # comptabilite H100
 
 module purge
-conda deactivate
 module load arch/h100
 module load pytorch-gpu/py3/2.4.0
 
 source /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_venv/bin/activate
-export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_venv/lib/python3.12.7/site-packages:$PYTHONPATH
 
 # Cache HuggingFace — pointe vers les poids pre-telecharges
 export HF_HOME=/lustre/fsn1/projects/rech/ehe/udq27fb/cache/huggingface
