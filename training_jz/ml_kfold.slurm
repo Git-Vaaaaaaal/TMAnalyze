@@ -1,19 +1,22 @@
+
 #!/bin/bash
 #SBATCH --job-name=ml_kfold
+#SBATCH --partition=cpu_dev
 #SBATCH --nodes=1
-#SBATCH --ntasks=4                 # Nombre de coeurs (n_jobs=-1 dans RSF les utilisera tous)
-#SBATCH --hint=nomultithread       # 1 processus par coeur physique
-#SBATCH --time=00:20:00            # Temps max (HH:MM:SS)
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --hint=nomultithread
+#SBATCH --time=00:20:00
 #SBATCH --output=ml_kfold.out
 #SBATCH --error=ml_kfold.err
 #SBATCH --qos=qos_cpu-dev
 #SBATCH --account=ehe@cpu
 
 module purge
-conda deactivate
 
 source /lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_venv/bin/activate
-export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_venv/lib/python3.12.7/site-packages:$PYTHONPATH
+PYVER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+export PYTHONPATH=/lustre/fsn1/projects/rech/ehe/udq27fb/TMAnalyze/tmanalyze_venv/lib/python${PYVER}/site-packages:$PYTHONPATH
 
 export MPLCONFIGDIR="$TMPDIR/matplotlib"
 mkdir -p "$MPLCONFIGDIR"

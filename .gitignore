@@ -10,6 +10,8 @@ env.py
 temporary_cleaning.csv
 *.csv
 *.png
+*.jpeg
+*.geojson
 /prism
 /figure
 /data_16
@@ -31,3 +33,10 @@ export.zip
 /export
 /kmeans
 /input_kmeans
+/data_224_reborn
+/out_gb
+/out_kaplan
+/out_rfs
+/out_rfs_kfold
+/out_rfs_pca
+*.zip
