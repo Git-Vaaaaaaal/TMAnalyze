@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --hint=nomultithread
-#SBATCH --time=00:20:00
+#SBATCH --time=00:10:00
 #SBATCH --output=ml_kfold.out
 #SBATCH --error=ml_kfold.err
 #SBATCH --qos=qos_cpu-dev
