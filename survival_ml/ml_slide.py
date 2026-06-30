@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from sksurv.ensemble import RandomSurvivalForest
-from sksurv.metrics import concordance_index_censored
+from sksurv.metrics import concordance_index_censored, concordance_index_ipcw
 from sksurv.nonparametric import kaplan_meier_estimator
 from sklearn.utils import resample
 
@@ -38,7 +38,7 @@ def cleaning_csv(df_path, marker, element_time, element_event, os_bool):
     if os_bool == True:
         mask = df[element_time] > 5.0
         df.loc[mask, element_event] = 0
-        df.loc[mask, element_event] = 5.0
+        df.loc[mask, element_time]  = 5.0
     return df
 
 
@@ -75,8 +75,8 @@ def balance_training_data(X_train, y_train, seed=42):
 
 def rsf_concordance_score(estimator, X, y):
     prediction = estimator.predict(X)
-    result = concordance_index_censored(y['event'], y['time'], prediction)
-    return result[0]  # retourne le C-index
+    result = concordance_index_ipcw(y, y, prediction)
+    return result[0]
 
 
 
@@ -85,7 +85,7 @@ def rsf_concordance_score(estimator, X, y):
 # ---------------------------------------------------------------------------
 
 os.makedirs("output_classical", exist_ok=True)
-os.makedirs("out_rfs", exist_ok=True)
+os.makedirs("out_rfs_ipcw", exist_ok=True)
 log_path = "logs_rf_survival.txt"
 results  = []
 
@@ -97,10 +97,10 @@ for marker in marker_list:
         features_csv = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
 
         parameters = {
-            'n_estimators': [100, 200, 300, 500],
-            'max_depth': [None, 5, 10, 20, 50],
-            'min_samples_split': [2, 5, 10, 20],
-            'min_samples_leaf': [1, 2, 4, 10],
+            'n_estimators': [100, 300, 500],
+            'max_depth': [None, 5, 20, 50],
+            'min_samples_split': [2, 10, 20],
+            'min_samples_leaf': [1, 2, 10],
             'max_features': ['sqrt', 'log2', None],
         }
 

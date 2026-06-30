@@ -448,3 +448,5 @@ OS,MYC,prism,c_index_train=0.9691,c_index_test=0.6594
 PFS,MYC,prism,c_index_train=0.9703,c_index_test=0.4931
 OS,MYC,feather,c_index_train=0.9801,c_index_test=0.7391
 PFS,MYC,feather,c_index_train=0.9730,c_index_test=0.7986
+OS, BCL2,prism | {'max_depth': 5, 'max_features': 'sqrt', 'min_samples_leaf': 4, 'min_samples_split': 10, 'n_estimators': 100}
+OS, BCL2,prism,c_index=0.4276

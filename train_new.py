@@ -105,13 +105,15 @@ my_combinations  = [(idx, combo) for idx, combo in enumerate(all_combinations) i
 print(f"[Shard {SHARD_ID}/{NUM_SHARDS}] {len(all_combinations)} combinaisons totales, "
       f"{len(my_combinations)} assignees a ce shard.")
 
+os.makedirs("output_reborn", exist_ok=True)
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 if torch.cuda.is_available():
     print(f"GPU : {torch.cuda.get_device_name(0)}")
 
 for idx, (encoder, marker, mil, status) in my_combinations:
     enc       = ENCODER_CFG[encoder]
-    run_dir   = os.path.join("output_ipi_v2", encoder, marker, mil, status)
+    run_dir   = os.path.join("output_reborn", encoder, marker, mil, status)
     run_label = f"{status} | {encoder} | {mil} | {marker}"
     os.makedirs(run_dir, exist_ok=True)
 
@@ -122,7 +124,7 @@ for idx, (encoder, marker, mil, status) in my_combinations:
     n_classes  = int(df_status["Status"].nunique())
     type_class = "binary" if n_classes == 2 else "multi_class"
 
-    tiles_dir = os.path.join("data_224", encoder, marker, enc["tiles_subdir"])
+    tiles_dir = os.path.join("data_224_reborn", encoder, marker, enc["tiles_subdir"])
     if not os.path.isdir(tiles_dir):
         print(f"[SKIP] tiles_dir introuvable : {tiles_dir}")
         continue
@@ -130,7 +132,7 @@ for idx, (encoder, marker, mil, status) in my_combinations:
     slide_features_csv = None
     bag_keys           = ["X", "Y", "coords"]
     if enc["slide_csv"]:
-        candidate = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
+        candidate = os.path.join("data_224_reborn", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
         if os.path.isfile(candidate):
             slide_features_csv = candidate
             bag_keys           = ["X", "X_slide", "Y", "coords"]

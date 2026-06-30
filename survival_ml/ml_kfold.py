@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.preprocessing import StandardScaler
 from sksurv.ensemble import RandomSurvivalForest
-from sksurv.metrics import concordance_index_censored
+from sksurv.metrics import concordance_index_censored, concordance_index_ipcw
 from sksurv.nonparametric import kaplan_meier_estimator
 from sklearn.utils import resample
 
@@ -73,7 +73,7 @@ def balance_training_data(X_train, y_train, seed=42):
 
 def rsf_concordance_score(estimator, X, y):
     prediction = estimator.predict(X)
-    result = concordance_index_censored(y['event'], y['time'], prediction)
+    result = concordance_index_ipcw(y['event'], y['time'], prediction)
     return result[0]  # retourne le C-index
 
 
