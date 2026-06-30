@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=8                 # Nombre de coeurs (n_jobs=-1 dans RSF les utilisera tous)
 #SBATCH --hint=nomultithread       # 1 processus par coeur physique
-#SBATCH --time=02:00:00            # Temps max (HH:MM:SS)
+#SBATCH --time=00:20:00            # Temps max (HH:MM:SS)
 #SBATCH --output=ml_kfold_%j.out
 #SBATCH --error=ml_kfold_%j.out
 #SBATCH --qos=qos_cpu-dev
