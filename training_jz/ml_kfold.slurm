@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=ml_kfold
 #SBATCH --nodes=1
-#SBATCH --ntasks=8                 # Nombre de coeurs (n_jobs=-1 dans RSF les utilisera tous)
+#SBATCH --ntasks=4                 # Nombre de coeurs (n_jobs=-1 dans RSF les utilisera tous)
 #SBATCH --hint=nomultithread       # 1 processus par coeur physique
 #SBATCH --time=00:20:00            # Temps max (HH:MM:SS)
-#SBATCH --output=ml_kfold_%j.out
-#SBATCH --error=ml_kfold_%j.out
+#SBATCH --output=ml_kfold.out
+#SBATCH --error=ml_kfold.err
 #SBATCH --qos=qos_cpu-dev
 #SBATCH --account=ehe@cpu
 
