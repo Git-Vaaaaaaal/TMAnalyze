@@ -1,4 +1,3 @@
-
 #!/bin/bash
 #SBATCH --job-name=ml_kfold
 #SBATCH --partition=cpu_dev
