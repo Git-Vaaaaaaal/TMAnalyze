@@ -1,13 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=ml_kfold
-#SBATCH --partition=cpu_dev
+#SBATCH --job-name=ml_kfold        # Nom du job
 #SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --hint=nomultithread
-#SBATCH --time=00:10:00
-#SBATCH --output=ml_kfold.out
-#SBATCH --error=ml_kfold.err
+#SBATCH --ntasks=4                 # Nombre total de processus MPI
+#SBATCH --hint=nomultithread       # 1 processus MPI par coeur physique (pas d'hyperthreading)
+#SBATCH --time=00:10:00            # Temps d’exécution maximum demande (HH:MM:SS)
+#SBATCH --output=ml_kfold.out   # Nom du travail
+#SBATCH --error=ml_kfold.out    # Nom du fichier d'erreur (ici commun avec la sortie)
 #SBATCH --qos=qos_cpu-dev
 #SBATCH --account=ehe@cpu
 
