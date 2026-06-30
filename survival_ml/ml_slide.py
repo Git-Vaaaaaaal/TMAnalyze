@@ -84,7 +84,6 @@ def rsf_concordance_score(estimator, X, y):
 # Main loop
 # ---------------------------------------------------------------------------
 
-os.makedirs("output_classical", exist_ok=True)
 os.makedirs("out_rfs_ipcw", exist_ok=True)
 log_path = "logs_rf_survival.txt"
 results  = []
@@ -172,10 +171,10 @@ for marker in marker_list:
             ax.set_title(f"{encoder} | {marker}")
             ax.legend()
             ax.grid(True)
-            fig.savefig(f"out_rfs/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
+            fig.savefig(f"out_rfs_ipcw/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
             plt.close(fig)
 
-csv_path = "out_rfs/results.csv"
+csv_path = "out_rfs_ipcw/results.csv"
 pd.DataFrame(results).to_csv(csv_path, index=False)
 print(f"\nRésultats sauvegardés → {csv_path}")
 

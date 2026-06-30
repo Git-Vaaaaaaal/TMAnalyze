@@ -87,7 +87,7 @@ os.makedirs("out_rfs_kfold", exist_ok=True)
 log_path = "logs_rf_survival.txt"
 results  = []
 
-parameters_df = pd.read_csv("out_rfs/results.csv")
+parameters_df = pd.read_csv("out_rfs_ipcw/results.csv")
 
 COLORS = {"OS": "steelblue", "PFS": "tomato"}
 
