@@ -460,3 +460,9 @@ PFS, BCL2,feather | {'max_depth': None, 'max_features': 'sqrt', 'min_samples_lea
 PFS, BCL2,feather,c_index=0.5959
 OS, BCL6,prism | {'max_depth': None, 'max_features': 'log2', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 300}
 OS, BCL6,prism,c_index=0.7252
+PFS, BCL6,prism | {'max_depth': None, 'max_features': 'log2', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 100}
+PFS, BCL6,prism,c_index=0.8157
+OS, BCL6,feather | {'max_depth': None, 'max_features': None, 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 500}
+OS, BCL6,feather,c_index=0.7733
+PFS, BCL6,feather | {'max_depth': 5, 'max_features': None, 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 300}
+PFS, BCL6,feather,c_index=0.7591

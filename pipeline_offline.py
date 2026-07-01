@@ -11,6 +11,7 @@ from env import hf_token
 os.environ["HF_TOKEN"]             = hf_token
 os.environ["HUGGINGFACE_HUB_TOKEN"] = hf_token
 os.environ["HF_HUB_OFFLINE"]       = "1"
+os.environ["TRANSFORMERS_OFFLINE"]  = "1"
 os.environ["HF_HUB_CACHE"]         = "/lustre/fsn1/projects/rech/ehe/udq27fb/cache/huggingface/hub"
 
 list_marker = ["HE", "MUM1", "MYC"] #
