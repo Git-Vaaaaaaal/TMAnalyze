@@ -14,7 +14,7 @@ os.environ["HF_HUB_OFFLINE"]       = "1"
 os.environ["HF_HUB_CACHE"]         = "/lustre/fsn1/projects/rech/ehe/udq27fb/cache/huggingface/hub"
 
 list_marker = ["HE", "MUM1", "MYC"] #
-list_slide_encoder = ["prism", "feather"] #["musk", "gpfm",  "hibou_l", "openmidnight", "virchow2"] "hoptimus1" prism", "feather", "titan"]
+list_slide_encoder = ["feather"]  
 slide_list = ["titan", "prism", "feather"]
 
 
