@@ -34,9 +34,9 @@ dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
 encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism", "titan", "feather"]
 
-mil_list = ["abmil"] #"abmil", "dsmil", "clam",
+mil_list = ["abmil", "dsmil", "clam"] #"abmil", "dsmil", "clam",
 
-status_list = ["IPI Risk Group (4 Class)"]
+status_list = ["IPI Score"]
 
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
