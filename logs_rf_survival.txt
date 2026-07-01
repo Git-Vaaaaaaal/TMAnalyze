@@ -450,3 +450,13 @@ OS,MYC,feather,c_index_train=0.9801,c_index_test=0.7391
 PFS,MYC,feather,c_index_train=0.9730,c_index_test=0.7986
 OS, BCL2,prism | {'max_depth': 5, 'max_features': 'sqrt', 'min_samples_leaf': 4, 'min_samples_split': 10, 'n_estimators': 100}
 OS, BCL2,prism,c_index=0.4276
+OS, BCL2,prism | {'max_depth': 5, 'max_features': 'log2', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 500}
+OS, BCL2,prism,c_index=0.3788
+PFS, BCL2,prism | {'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 300}
+PFS, BCL2,prism,c_index=0.4386
+OS, BCL2,feather | {'max_depth': 5, 'max_features': 'sqrt', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 100}
+OS, BCL2,feather,c_index=0.4457
+PFS, BCL2,feather | {'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 20, 'n_estimators': 300}
+PFS, BCL2,feather,c_index=0.5959
+OS, BCL6,prism | {'max_depth': None, 'max_features': 'log2', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 300}
+OS, BCL6,prism,c_index=0.7252

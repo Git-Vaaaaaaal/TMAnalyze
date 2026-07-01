@@ -99,7 +99,7 @@ for marker in marker_list:
             'n_estimators': [100, 300, 500],
             'max_depth': [None, 5, 20, 50],
             'min_samples_split': [2, 10, 20],
-            'min_samples_leaf': [1, 2, 10],
+            'min_samples_leaf': [2, 10],
             'max_features': ['sqrt', 'log2', None],
         }
 

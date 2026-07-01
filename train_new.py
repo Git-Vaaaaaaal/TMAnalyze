@@ -34,7 +34,7 @@ dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
 encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism", "titan", "feather"]
 
-mil_list = ["dsmil", "clam"] #"abmil", "dsmil", "clam",
+mil_list = ["abmil"] #"abmil", "dsmil", "clam",
 
 status_list = ["IPI Risk Group (4 Class)"]
 
