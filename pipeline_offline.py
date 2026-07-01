@@ -14,7 +14,7 @@ os.environ["HF_HUB_OFFLINE"]       = "1"
 os.environ["HF_HUB_CACHE"]         = "/lustre/fsn1/projects/rech/ehe/udq27fb/cache/huggingface/hub"
 
 list_marker = ["HE", "MUM1", "MYC"] #
-list_slide_encoder = ["musk", "gpfm",  "hibou_l", "openmidnight", "virchow2"]# "hoptimus1" prism", "feather", "titan"]
+list_slide_encoder = ["prism", "feather"] #["musk", "gpfm",  "hibou_l", "openmidnight", "virchow2"] "hoptimus1" prism", "feather", "titan"]
 slide_list = ["titan", "prism", "feather"]
 
 
@@ -52,5 +52,5 @@ for marker in list_marker :
             )
 
         encoder_name = f"{slide_encoder}"
-
-        running_patch_embedding(embedding, encoder_name, magnification, patch_size)
+        running_slide_embedding(embedding, encoder_name, magnification, patch_size)
+        #running_patch_embedding(embedding, encoder_name, magnification, patch_size)
