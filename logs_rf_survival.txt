@@ -466,3 +466,90 @@ OS, BCL6,feather | {'max_depth': None, 'max_features': None, 'min_samples_leaf':
 OS, BCL6,feather,c_index=0.7733
 PFS, BCL6,feather | {'max_depth': 5, 'max_features': None, 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 300}
 PFS, BCL6,feather,c_index=0.7591
+OS, CD10,prism | {'max_depth': None, 'max_features': 'log2', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 300}
+OS, CD10,prism,c_index=0.5612
+PFS, CD10,prism | {'max_depth': 5, 'max_features': 'sqrt', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 300}
+PFS, CD10,prism,c_index=0.5975
+OS, CD10,feather | {'max_depth': 5, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 500}
+OS, CD10,feather,c_index=0.6203
+PFS, CD10,feather | {'max_depth': None, 'max_features': 'log2', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 100}
+PFS, CD10,feather,c_index=0.6576
+OS, HE,prism | {'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 100}
+OS, HE,prism,c_index=0.6343
+PFS, HE,prism | {'max_depth': 5, 'max_features': None, 'min_samples_leaf': 2, 'min_samples_split': 20, 'n_estimators': 100}
+PFS, HE,prism,c_index=0.6055
+OS, HE,feather | {'max_depth': 5, 'max_features': 'log2', 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 100}
+OS, HE,feather,c_index=0.5714
+PFS, HE,feather | {'max_depth': 20, 'max_features': 'log2', 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 300}
+PFS, HE,feather,c_index=0.5894
+OS, MUM1,prism | {'max_depth': 5, 'max_features': 'sqrt', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 100}
+OS, MUM1,prism,c_index=0.6632
+PFS, MUM1,prism | {'max_depth': None, 'max_features': None, 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 500}
+PFS, MUM1,prism,c_index=0.5749
+OS, MUM1,feather | {'max_depth': None, 'max_features': 'log2', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 500}
+OS, MUM1,feather,c_index=0.6526
+PFS, MUM1,feather | {'max_depth': None, 'max_features': 'log2', 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 100}
+PFS, MUM1,feather,c_index=0.5229
+OS, MYC,prism | {'max_depth': 5, 'max_features': 'log2', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 300}
+OS, MYC,prism,c_index=0.4446
+PFS, MYC,prism | {'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 300}
+PFS, MYC,prism,c_index=0.5841
+OS, MYC,feather | {'max_depth': None, 'max_features': 'log2', 'min_samples_leaf': 10, 'min_samples_split': 2, 'n_estimators': 100}
+OS, MYC,feather,c_index=0.6290
+PFS, MYC,feather | {'max_depth': 5, 'max_features': 'log2', 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 100}
+PFS, MYC,feather,c_index=0.6265
+OS, BCL2,prism,c_index=0.3461
+PFS, BCL2,prism,c_index=0.4622
+OS, BCL2,feather,c_index=0.5738
+PFS, BCL2,feather,c_index=0.6055
+OS, BCL6,prism,c_index=0.7290
+PFS, BCL6,prism,c_index=0.7429
+OS, BCL6,feather,c_index=0.6947
+PFS, BCL6,feather,c_index=0.6214
+OS, CD10,prism,c_index=0.4522
+PFS, CD10,prism,c_index=0.4631
+OS, CD10,feather,c_index=0.6404
+PFS, CD10,feather,c_index=0.5646
+OS, HE,prism,c_index=0.5048
+PFS, HE,prism,c_index=0.5460
+OS, HE,feather,c_index=0.5943
+PFS, HE,feather,c_index=0.6457
+OS, MUM1,prism,c_index=0.5632
+PFS, MUM1,prism,c_index=0.5373
+OS, MUM1,feather,c_index=0.6342
+PFS, MUM1,feather,c_index=0.5621
+OS, MYC,prism,c_index=0.5137
+PFS, MYC,prism,c_index=0.6259
+OS, MYC,feather,c_index=0.2939
+PFS, MYC,feather,c_index=0.3613
+OS, BCL2,prism,c_index=0.4937
+PFS, BCL2,prism,c_index=0.4759
+OS, BCL2,feather,c_index=0.6226
+PFS, BCL2,feather,c_index=0.6784
+OS, BCL6,prism,c_index=0.6374
+PFS, BCL6,prism,c_index=0.5429
+OS, BCL6,feather,c_index=0.7405
+OS, BCL2,prism,c_index=0.4777
+PFS, BCL2,prism,c_index=0.4714
+OS, BCL2,feather,c_index=0.6351
+PFS, BCL2,feather,c_index=0.6589
+OS, BCL6,prism,c_index=0.6947
+PFS, BCL6,prism,c_index=0.6786
+OS, BCL6,feather,c_index=0.6641
+PFS, BCL6,feather,c_index=0.7179
+OS, CD10,prism,c_index=0.4522
+PFS, CD10,prism,c_index=0.5406
+OS, CD10,feather,c_index=0.6938
+PFS, CD10,feather,c_index=0.6162
+OS, HE,prism,c_index=0.5162
+PFS, HE,prism,c_index=0.4586
+OS, HE,feather,c_index=0.5371
+PFS, HE,feather,c_index=0.6150
+OS, MUM1,prism,c_index=0.6737
+PFS, MUM1,prism,c_index=0.6157
+OS, MUM1,feather,c_index=0.6658
+PFS, MUM1,feather,c_index=0.5545
+OS, MYC,prism,c_index=0.5518
+PFS, MYC,prism,c_index=0.5931
+OS, MYC,feather,c_index=0.3256
+PFS, MYC,feather,c_index=0.3741

@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from sksurv.ensemble import RandomSurvivalForest
-from sksurv.metrics import concordance_index_censored
+from sksurv.metrics import concordance_index_censored, concordance_index_ipcw
 from sksurv.nonparametric import kaplan_meier_estimator
 from sklearn.utils import resample
 
@@ -26,6 +26,7 @@ ENCODER_CFG = {
 
 dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
+log_path = "out_rfs/concat_log.txt"
 
 
 def cleaning_csv(df_path, marker, element_time, element_event, os_bool):
@@ -77,6 +78,7 @@ def rsf_concordance_score(estimator, X, y):
     prediction = estimator.predict(X)
     result = concordance_index_censored(y['event'], y['time'], prediction)
     return result[0]  # retourne le C-index
+
 
 
 # ---------------------------------------------------------------------------
@@ -159,10 +161,9 @@ for encoder in encoder_list:
         X_val_sc   = scaler.transform(X_val)
 
         model = RandomSurvivalForest(n_estimators=200, random_state=42, n_jobs=-1)
-        clf   = GridSearchCV(model, parameters, cv=5, scoring=rsf_concordance_score)
-        clf.fit(X_train_sc, y_train)
+        model.fit(X_train_sc, y_train)
 
-        c_index = clf.score(X_val_sc, y_val)
+        c_index = model.score(X_val_sc, y_val)
         print(f"  [concat {encoder} {element_time}] C-index : {c_index:.4f}")
         with open(log_path, "a") as f:
             f.write(f"CONCAT {element_time},{encoder},c_index={c_index:.4f}\n")
@@ -173,7 +174,7 @@ for encoder in encoder_list:
             "n_train": len(y_train), "n_val": len(y_val),
             "events_train": int(y_train["event"].sum()),
             "events_val":   int(y_val["event"].sum()),
-            **{f"best_{k}": v for k, v in clf.best_params_.items()},
+            **{f"best_{k}": v for k, v in model.get_params().items()},
         })
 
         km_times, km_surv  = kaplan_meier_estimator(y_val["event"], y_val["time"])

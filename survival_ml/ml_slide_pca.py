@@ -38,7 +38,7 @@ def cleaning_csv(df_path, marker, element_time, element_event, os_bool):
     if os_bool == True:
         mask = df[element_time] > 5.0
         df.loc[mask, element_event] = 0
-        df.loc[mask, element_event] = 5.0
+        df.loc[mask, element_time]  = 5.0
     return df
 
 
@@ -140,10 +140,17 @@ for marker in marker_list:
             var_exp    = pca.explained_variance_ratio_.sum()
             print(f"  [{element_time}] PCA : {X_train.shape[1]} → {n_comp} composantes ({var_exp*100:.1f}% variance)")
 
-            model = RandomSurvivalForest(n_estimators=parameters["n_estimators"], max_depth=parameters["max_depth"], min_samples_split=parameters["min_samples_split"], min_samples_leaf=parameters["min_samples_leaf"], max_features=parameters["max_features"], random_state=42, n_jobs=-1)
-            pca.fit(X_train_sc, y_train)
+            model = RandomSurvivalForest(
+                n_estimators=int(parameters["n_estimators"]),
+                max_depth=parameters["max_depth"],
+                min_samples_split=int(parameters["min_samples_split"]),
+                min_samples_leaf=int(parameters["min_samples_leaf"]),
+                max_features=parameters["max_features"],
+                random_state=42, n_jobs=-1,
+            )
+            model.fit(X_train_sc, y_train)
 
-            c_index = pca.score(X_val_sc, y_val)
+            c_index = model.score(X_val_sc, y_val)
             with open(log_path, "a") as f:
                 f.write(f"{element_time}, {marker},{encoder},c_index={c_index:.4f}\n")
 
@@ -179,7 +186,7 @@ for marker in marker_list:
             ax.set_title(f"{encoder} | {marker}")
             ax.legend()
             ax.grid(True)
-            fig.savefig(f"out_rfs/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
+            #fig.savefig(f"out_rfs_pca/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
             plt.close(fig)
 
 csv_path = "out_rfs_pca/results.csv"

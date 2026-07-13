@@ -28,33 +28,28 @@ def load_marker_data(df, time_col, event_col, cap=5.0):
     return df
 
 
-def plot_combined_km(df_os, df_pfs, os_time, pfs_time, event_col,
-                     output_path):
+def plot_single_km(df, time_col, event_col, endpoint, output_path):
+    color  = COLORS[endpoint]
+    n      = len(df)
+    events = int(df[event_col].sum())
+
+    y = np.array(
+        list(zip(df[event_col].astype(bool), df[time_col])),
+        dtype=[("event", bool), ("time", float)],
+    )
+    times, surv = kaplan_meier_estimator(y["event"], y["time"])
+
     fig, ax = plt.subplots(figsize=(9, 6))
 
-    for endpoint, df, time_col in [
-        ("OS",  df_os,  os_time),
-        ("PFS", df_pfs, pfs_time),
-    ]:
-        color  = COLORS[endpoint]
-        n      = len(df)
-        events = int(df[event_col].sum())
+    ax.step(times, surv, where="post", color=color, linewidth=2,
+            label=f"{endpoint}  (N={n}, events={events})")
 
-        y = np.array(
-            list(zip(df[event_col].astype(bool), df[time_col])),
-            dtype=[("event", bool), ("time", float)],
-        )
-        times, surv = kaplan_meier_estimator(y["event"], y["time"])
+    censored = df[df[event_col] == 0][time_col].values
+    for ct in censored:
+        idx = max(np.searchsorted(times, ct, side="right") - 1, 0)
+        ax.plot(ct, surv[idx], "|", color=color, markersize=9, markeredgewidth=1.5)
 
-        ax.step(times, surv, where="post", color=color, linewidth=2,
-                label=f"{endpoint}  (N={n}, events={events})")
-
-        censored = df[df[event_col] == 0][time_col].values
-        for ct in censored:
-            idx = max(np.searchsorted(times, ct, side="right") - 1, 0)
-            ax.plot(ct, surv[idx], "|", color=color, markersize=9, markeredgewidth=1.5)
-
-    ax.set_title(f"Kaplan-Meier OS + PFS - Population globale", fontsize=13)
+    ax.set_title(f"Kaplan-Meier {endpoint} - Population globale", fontsize=13)
     ax.set_xlabel("Temps (années)", fontsize=11)
     ax.set_ylabel("Probabilité de survie", fontsize=11)
     ax.set_ylim(0, 1)
@@ -71,14 +66,10 @@ def plot_combined_km(df_os, df_pfs, os_time, pfs_time, event_col,
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 df_all = pd.read_csv(CSV_PATH)
 
+df_os  = load_marker_data(df_all.copy(), "OS",  EVENT_COL, cap=CAP_YEARS)
+df_pfs = load_marker_data(df_all.copy(), "PFS", EVENT_COL, cap=CAP_YEARS)
 
-df_os  = load_marker_data(df_all, "OS",  EVENT_COL, cap=CAP_YEARS)
-df_pfs = load_marker_data(df_all, "PFS", EVENT_COL, cap=CAP_YEARS)
-
-
-plot_combined_km(
-    df_os, df_pfs, "OS", "PFS", EVENT_COL,
-    output_path=os.path.join(OUTPUT_DIR, f"km_final.png"),
-)
+plot_single_km(df_os,  "OS",  EVENT_COL, "OS",  os.path.join(OUTPUT_DIR, "km_OS.png"))
+plot_single_km(df_pfs, "PFS", EVENT_COL, "PFS", os.path.join(OUTPUT_DIR, "km_PFS.png"))
 
 print(f"\nTerminé. Graphes dans {OUTPUT_DIR}/")
