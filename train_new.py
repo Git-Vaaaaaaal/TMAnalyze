@@ -46,8 +46,8 @@ status_dict = {
     },
     "IPI Risk Group (4 Class)": {
         "label": "IPI Risk Group (4 Class)",
-        "group_0": [0.0],
-        "group_1": [1.0, 2.0, 3.0]
+        "group_0": [0],
+        "group_1": [1, 2, 3]
         },
     "ECOG PS": {
         "label": "ECOG PS",
@@ -56,13 +56,13 @@ status_dict = {
         },
     "LDH": {
         "label": "LDH",
-        "group_0": [0.0],
-        "group_1": [1.0]
+        "group_0": [0],
+        "group_1": [1]
         },
     "Stage": {
         "label": "Stage",
-        "group_0": [1.0, 2.0],
-        "group_1": [3.0, 4.0]
+        "group_0": [1, 2],
+        "group_1": [3, 4]
         },
 }
 

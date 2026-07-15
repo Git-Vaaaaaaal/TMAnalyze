@@ -8,8 +8,10 @@ from sksurv.nonparametric import kaplan_meier_estimator
 
 
 # ── Configuration ──────────────────────────────────────────────────────────
-CSV_PATH    = r"csv/multi_label_patient_id.csv"
+CSV_PATH    = r"csv/IA2HL.csv"
 EVENT_COL   = "status"
+EVENT_COL_PFS = "PFS\ncensoring"
+EVENT_COL_OS  = "OS\ncensoring"
 OUTPUT_DIR  = "out_kaplan"
 CAP_YEARS   = 5.0
 # ───────────────────────────────────────────────────────────────────────────
@@ -18,6 +20,9 @@ COLORS = {"OS": "steelblue", "PFS": "tomato"}
 
 
 def load_marker_data(df, time_col, event_col, cap=5.0):
+    df = df.dropna(subset=[time_col, event_col])
+    if df[event_col].dtype == object:
+        df[event_col] = df[event_col].map({"Yes": 0, "No": 1})
     df[event_col] = df[event_col].astype(int)
     df[time_col]  = df[time_col].astype(float)
     df = df[df[time_col] >= 0]
@@ -64,12 +69,12 @@ def plot_single_km(df, time_col, event_col, endpoint, output_path):
 # ── Main ───────────────────────────────────────────────────────────────────
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-df_all = pd.read_csv(CSV_PATH)
+df_all = pd.read_csv(CSV_PATH, sep=";")
 
-df_os  = load_marker_data(df_all.copy(), "OS",  EVENT_COL, cap=CAP_YEARS)
-df_pfs = load_marker_data(df_all.copy(), "PFS", EVENT_COL, cap=CAP_YEARS)
+df_os  = load_marker_data(df_all.copy(), "Overall\nsurvival\n(years)", EVENT_COL_OS,  cap=CAP_YEARS)
+df_pfs = load_marker_data(df_all.copy(), "PFS\n(years)",               EVENT_COL_PFS, cap=CAP_YEARS)
 
-plot_single_km(df_os,  "OS",  EVENT_COL, "OS",  os.path.join(OUTPUT_DIR, "km_OS.png"))
-plot_single_km(df_pfs, "PFS", EVENT_COL, "PFS", os.path.join(OUTPUT_DIR, "km_PFS.png"))
+plot_single_km(df_os,  "OS",  EVENT_COL_OS, "OS",  os.path.join(OUTPUT_DIR, "km_OS_ia2hl.png"))
+plot_single_km(df_pfs, "PFS", EVENT_COL_PFS, "PFS", os.path.join(OUTPUT_DIR, "km_PFS_ia2hl.png"))
 
 print(f"\nTerminé. Graphes dans {OUTPUT_DIR}/")
