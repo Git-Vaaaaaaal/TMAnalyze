@@ -101,6 +101,12 @@ def build_dataloaders(cfg):
             val_indices.extend(remaining[:n_val].tolist())
             train_indices.extend(remaining[n_val:].tolist())
 
+    if len(train_indices) == 0 or len(val_indices) == 0:
+        raise ValueError(
+            f"Split invalide : train={len(train_indices)}, val={len(val_indices)}, test={len(test_indices)} — "
+            "pas assez de patients pour construire les loaders."
+        )
+
     train_ds = dataset.subset(train_indices)
     val_ds   = dataset.subset(val_indices)
     test_ds  = dataset.subset(test_indices)

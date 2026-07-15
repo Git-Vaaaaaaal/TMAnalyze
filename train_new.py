@@ -46,7 +46,7 @@ status_dict = {
     },
     "IPI Risk Group (4 Class)": {
         "label": "IPI Risk Group (4 Class)",
-        "group_0": [0.0, 1.0],
+        "group_0": [0.0],
         "group_1": [1.0, 2.0, 3.0]
         },
     "ECOG PS": {
@@ -198,7 +198,11 @@ for idx, (encoder, marker, mil, status) in my_combinations:
 
     torch.manual_seed(CFG["seed"])
 
-    train_loader, val_loader, test_loader = build_dataloaders(CFG)
+    try:
+        train_loader, val_loader, test_loader = build_dataloaders(CFG)
+    except ValueError as e:
+        print(f"[SKIP] {e}")
+        continue
     model, optimizer, scheduler       = build_model(CFG)
     history, best_epoch, best_val_auc = train(
         CFG, model, optimizer, scheduler, train_loader, val_loader,

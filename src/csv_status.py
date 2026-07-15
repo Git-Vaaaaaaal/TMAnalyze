@@ -22,7 +22,13 @@ def binarize_column(df, column: str, group_0: list, group_1: list) -> pd.DataFra
     mapping = {str(v): 0 for v in group_0}
     mapping.update({str(v): 1 for v in group_1})
 
-    src = df[column].astype(str)
+    def _norm(s):
+        try:
+            return str(int(float(s)))
+        except (ValueError, TypeError):
+            return s
+
+    src = df[column].astype(str).apply(_norm)
     unknown = set(src.dropna().unique()) - set(mapping.keys()) - {"nan"}
     if unknown:
         print(f"[ATTENTION] Valeurs non mappées (seront NaN) : {unknown}")
@@ -53,7 +59,7 @@ def cleaning_csv(df_path, marker, encoder, element, group_0, group_1):
     df_label["Status"] = df_label["Status"].replace("", np.nan)
     df_label = df_label.dropna(subset=["Status"])
     df_label = binarize_column(df_label, "Status", group_0=group_0, group_1=group_1)
-    df_label = df_label[df_label["Status"].astype(str).str.strip() != ""]
+    df_label = df_label.dropna(subset=["Status"])
     df_label["Status"] = pd.factorize(df_label["Status"])[0]
     os.makedirs("csv", exist_ok=True)
     out_csv_marker = os.path.join("csv", f"{marker}_{encoder}_{element}.csv")
