@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, random_split
 from torchmil.data import collate_fn
 
-from src.training_mil import run_epoch, plot_dashboard
+from src.training_mil import run_epoch, plot_accuracy_curves, plot_confusion_matrix
 from src.dataloader import build_dataloaders, build_model
 from src.evaluation import evaluate, generate_heatmaps
 from src.csv_status import cleaning_csv
@@ -36,7 +36,35 @@ encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism"
 
 mil_list = ["abmil", "dsmil", "clam"] #"abmil", "dsmil", "clam",
 
-status_list = ["IPI Score"]
+status_list = ["IPI Score", "IPI Risk Group (4 Class)", "ECOG PS", "LDH", "Stage"] #["IPI Score", "IPI Risk Group (4 Class)", "ECOG PS", "LDH", "Stage"]
+
+status_dict = {
+    "IPI Score": {
+        "label": "IPI Score",
+        "group_0": [0, 1, 2],
+        "group_1": [3, 4, 5],
+    },
+    "IPI Risk Group (4 Class)": {
+        "label": "IPI Risk Group (4 Class)",
+        "group_0": [0.0, 1.0],
+        "group_1": [1.0, 2.0, 3.0]
+        },
+    "ECOG PS": {
+        "label": "ECOG PS",
+        "group_0": [0],
+        "group_1": [1, 2, 3]
+        },
+    "LDH": {
+        "label": "LDH",
+        "group_0": [0.0],
+        "group_1": [1.0]
+        },
+    "Stage": {
+        "label": "Stage",
+        "group_0": [1.0, 2.0],
+        "group_1": [3.0, 4.0]
+        },
+}
 
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
@@ -55,9 +83,9 @@ from itertools import product
 
 def train(cfg, model, optimizer, scheduler, train_loader, val_loader, run_label, log_path):
     history      = {k: [] for k in ["train_loss", "val_loss", "train_acc", "val_acc", "train_auc", "val_auc", "train_ap", "val_ap"]}
-    best_score   = -float("inf")
-    best_epoch   = 0
     best_val_auc = -1.0
+    best_epoch   = 0
+    best_model_path = os.path.join(cfg["output_dir"], "best_model.pth")
 
     with open(log_path, "w", buffering=1) as log:
         header = f"=== {run_label} ===\n"
@@ -73,22 +101,20 @@ def train(cfg, model, optimizer, scheduler, train_loader, val_loader, run_label,
                 for key in ["loss", "acc", "auc", "ap"]:
                     history[f"{phase}_{key}"].append(m[key])
 
-            train_score = train_metrics["acc"] - train_metrics["loss"]
-
             line = (
                 f"Epoch {epoch:03d}/{cfg['epochs']} | "
-                f"Train — loss: {train_metrics['loss']:.4f}  acc: {train_metrics['acc']:.3f}  AUC: {train_metrics['auc']:.3f}  score: {train_score:.3f} | "
+                f"Train — loss: {train_metrics['loss']:.4f}  acc: {train_metrics['acc']:.3f}  AUC: {train_metrics['auc']:.3f} | "
                 f"Val   — loss: {val_metrics['loss']:.4f}  acc: {val_metrics['acc']:.3f}  AUC: {val_metrics['auc']:.3f}\n"
             )
             print(line, end="")
             log.write(line)
 
-            if train_score > best_score:
-                best_score   = train_score
-                best_epoch   = epoch
+            if val_metrics["auc"] > best_val_auc:
                 best_val_auc = val_metrics["auc"]
+                best_epoch   = epoch
+                torch.save(model.state_dict(), best_model_path)
 
-        summary = f"\nMeilleur epoch {best_epoch} (score={best_score:.3f}), val AUC: {best_val_auc:.4f}\n"
+        summary = f"\nMeilleur epoch {best_epoch} — val AUC: {best_val_auc:.4f} — checkpoint: {best_model_path}\n"
         print(summary, end="")
         log.write(summary)
 
@@ -106,6 +132,9 @@ print(f"[Shard {SHARD_ID}/{NUM_SHARDS}] {len(all_combinations)} combinaisons tot
       f"{len(my_combinations)} assignees a ce shard.")
 
 os.makedirs("output_reborn", exist_ok=True)
+accuracy_log_path = os.path.join("output_reborn", "accuracy_summary.txt")
+with open(accuracy_log_path, "w") as f:
+    f.write("run_label\ttrain_acc\ttest_acc\n")
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 if torch.cuda.is_available():
@@ -117,7 +146,9 @@ for idx, (encoder, marker, mil, status) in my_combinations:
     run_label = f"{status} | {encoder} | {mil} | {marker}"
     os.makedirs(run_dir, exist_ok=True)
 
-    out_csv_marker, df_status = cleaning_csv(dataframe_id, marker, encoder, status)
+    out_csv_marker, df_status = cleaning_csv(dataframe_id, marker, encoder, status,
+                                            group_0=status_dict[status]["group_0"],
+                                            group_1=status_dict[status]["group_1"])
     if df_status.empty:
         print(f"[SKIP] pas de patients valides pour {run_label}")
         continue
@@ -175,7 +206,13 @@ for idx, (encoder, marker, mil, status) in my_combinations:
     )
     final_tracker = evaluate(CFG, model, test_loader, optimizer)
 
-    plot_dashboard(history, best_epoch, final_tracker, os.path.join(run_dir, "dashboard.png"))
+    train_acc = history["train_acc"][best_epoch - 1]
+    test_acc  = (np.array(final_tracker.targets) == np.array(final_tracker.preds)).mean()
+    with open(accuracy_log_path, "a") as f:
+        f.write(f"{run_label}\t{train_acc:.4f}\t{test_acc:.4f}\n")
+
+    plot_accuracy_curves(history, best_epoch,   os.path.join(run_dir, "accuracy_curves.png"))
+    plot_confusion_matrix(final_tracker,         os.path.join(run_dir, "confusion_matrix.png"))
     #generate_heatmaps(CFG, model)
 
 

@@ -45,13 +45,14 @@ def binarize_column(df, column: str, group_0: list, group_1: list) -> pd.DataFra
 
 
 
-def cleaning_csv(df_path, marker, encoder, element):
+def cleaning_csv(df_path, marker, encoder, element, group_0, group_1):
     df_label = pd.read_csv(df_path)
     df_label = df_label[df_label["stain"] == marker]
-    df_label = df_label[["patient_id", element]].rename(columns={element: "Status"})
+    keep_cols = [c for c in ["patient_id", "old_patient_id", element] if c in df_label.columns]
+    df_label = df_label[keep_cols].rename(columns={element: "Status"})
     df_label["Status"] = df_label["Status"].replace("", np.nan)
     df_label = df_label.dropna(subset=["Status"])
-    df_label = binarize_column(df_label, "IPI Score", group_0=[0, 1, 2], group_1=[3, 4, 5])
+    df_label = binarize_column(df_label, "Status", group_0=group_0, group_1=group_1)
     df_label = df_label[df_label["Status"].astype(str).str.strip() != ""]
     df_label["Status"] = pd.factorize(df_label["Status"])[0]
     os.makedirs("csv", exist_ok=True)

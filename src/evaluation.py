@@ -9,13 +9,14 @@ from src.training_mil import run_epoch
 
 
 
-def evaluate(cfg, model, val_loader, optimizer):
-    # best_model_path = os.path.join(cfg["output_dir"], "best_model.pth")
-    # model.load_state_dict(torch.load(best_model_path, map_location=cfg["device"]))
-    final_metrics, final_tracker = run_epoch(model, val_loader, optimizer, cfg["device"], train=False)
+def evaluate(cfg, model, test_loader, optimizer):
+    best_model_path = os.path.join(cfg["output_dir"], "best_model.pth")
+    model.load_state_dict(torch.load(best_model_path, map_location=cfg["device"]))
+
+    final_metrics, final_tracker = run_epoch(model, test_loader, optimizer, cfg["device"], train=False)
 
     print("\n" + "=" * 60)
-    print("RÉSUMÉ FINAL (meilleur modèle, val set)")
+    print("RÉSUMÉ FINAL (meilleur modèle — test set)")
     print("=" * 60)
     print(f"  Loss      : {final_metrics['loss']:.4f}")
     print(f"  Accuracy  : {final_metrics['acc']:.4f}")

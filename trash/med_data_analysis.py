@@ -75,8 +75,8 @@ def describe_categorical(csv_path: str, column: str, sep: str = ",") -> None:
 
 csv_path = r"csv/clinical_data_cleaned.csv"
 
-column_name = "OS"
-describe_continuous(csv_path, column_name)
+#column_name = "OS"
+#describe_continuous(csv_path, column_name)
 
-column_name_cat = "IPI Risk Group (4 Class)"
+column_name_cat = "Stage"
 describe_categorical(csv_path, column_name_cat)

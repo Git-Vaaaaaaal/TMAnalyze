@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import (
     roc_auc_score, average_precision_score,
     confusion_matrix, ConfusionMatrixDisplay,
-    roc_curve,
 )
 from torch.utils.data import DataLoader
 import inspect
@@ -97,54 +96,40 @@ def run_epoch(model, loader, optimizer, device, train=True):
     return tracker.compute(), tracker
 
 
-def plot_dashboard(history, best_epoch, final_tracker, save_path):
-    """Génère et sauvegarde le dashboard matplotlib : Loss | ROC Curve | Confusion Matrix."""
-    n_epochs = len(history["train_loss"])
+def plot_accuracy_curves(history, best_epoch, save_path):
+    """Courbes d'accuracy train / validation sur les epochs."""
+    n_epochs = len(history["train_acc"])
     EPOCHS   = list(range(1, n_epochs + 1))
     COLOR    = dict(train="#3B6D11", val="#185FA5")
 
-    y_true = np.array(final_tracker.targets)
-    y_prob = np.array(final_tracker.probs)
-    y_pred = np.array(final_tracker.preds)
-    cm     = confusion_matrix(y_true, y_pred)
-    is_multiclass = y_prob.ndim == 2
-
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    fig.suptitle("MIL Training Dashboard", fontsize=14, fontweight="bold")
-
-    # 1. Loss
-    ax = axes[0]
-    ax.plot(EPOCHS, history["train_loss"], label="Train", color=COLOR["train"], linewidth=2)
-    ax.plot(EPOCHS, history["val_loss"],   label="Val",   color=COLOR["val"],   linewidth=2, linestyle="--")
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(EPOCHS, history["train_acc"], label="Train", color=COLOR["train"], linewidth=2)
+    ax.plot(EPOCHS, history["val_acc"],   label="Val",   color=COLOR["val"],   linewidth=2, linestyle="--")
     ax.axvline(best_epoch, color="#A32D2D", linestyle=":", linewidth=1.5, label=f"Best (ep {best_epoch})")
-    ax.set_title("Loss"); ax.set_xlabel("Epoch"); ax.legend(fontsize=9); ax.grid(alpha=0.3)
-
-    # 2. ROC Curve
-    ax = axes[1]
-    try:
-        if is_multiclass:
-            n_classes = y_prob.shape[1]
-            for c in range(n_classes):
-                fpr, tpr, _ = roc_curve((y_true == c).astype(int), y_prob[:, c])
-                auc_c = roc_auc_score((y_true == c).astype(int), y_prob[:, c])
-                ax.plot(fpr, tpr, linewidth=2, label=f"Class {c} (AUC={auc_c:.2f})")
-        else:
-            fpr, tpr, _ = roc_curve(y_true, y_prob)
-            auc_val = roc_auc_score(y_true, y_prob)
-            ax.plot(fpr, tpr, color=COLOR["val"], linewidth=2, label=f"AUC = {auc_val:.3f}")
-        ax.plot([0, 1], [0, 1], "k--", linewidth=1, alpha=0.4)
-    except ValueError:
-        ax.text(0.5, 0.5, "ROC non disponible", ha="center", va="center", transform=ax.transAxes)
-    ax.set_title("ROC Curve (best model)"); ax.set_xlabel("FPR"); ax.set_ylabel("TPR")
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.legend(fontsize=9); ax.grid(alpha=0.3)
-
-    # 3. Confusion Matrix
-    ConfusionMatrixDisplay(confusion_matrix=cm).plot(ax=axes[2], colorbar=False, cmap="Blues")
-    axes[2].set_title("Confusion Matrix (best model)")
+    ax.set_title("Accuracy — Train / Validation", fontsize=13)
+    ax.set_xlabel("Epoch"); ax.set_ylabel("Accuracy")
+    ax.set_ylim(0, 1); ax.legend(fontsize=10); ax.grid(alpha=0.3)
 
     plt.tight_layout()
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     fig.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"Dashboard sauvegardé → {save_path}")
+    print(f"Courbes accuracy → {save_path}")
+
+
+def plot_confusion_matrix(final_tracker, save_path):
+    """Matrice de confusion sur le jeu de test."""
+    y_true = np.array(final_tracker.targets)
+    y_pred = np.array(final_tracker.preds)
+    cm     = confusion_matrix(y_true, y_pred)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ConfusionMatrixDisplay(confusion_matrix=cm).plot(ax=ax, colorbar=False, cmap="Blues")
+    ax.set_title("Matrice de confusion (test)", fontsize=13)
+
+    plt.tight_layout()
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    fig.savefig(save_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Matrice confusion → {save_path}")
 
