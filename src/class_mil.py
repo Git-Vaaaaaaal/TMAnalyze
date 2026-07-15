@@ -145,7 +145,10 @@ class CSVMILDataset(torch.utils.data.Dataset):
     def _load_label(self, patient_id: str) -> np.ndarray:
         """Charge le label depuis le CSV global."""
         try:
-            return self.df_labels.loc[patient_id].values.astype(np.float32)
+            row = self.df_labels.loc[patient_id]
+            if "Status" in self.df_labels.columns:
+                return np.array([float(row["Status"])], dtype=np.float32)
+            return row.values.astype(np.float32)
         except KeyError:
             raise ValueError(f"Patient '{patient_id}' introuvable dans labels_csv.")
 
