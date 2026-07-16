@@ -84,7 +84,7 @@ def rsf_concordance_score(estimator, X, y):
 # Main loop
 # ---------------------------------------------------------------------------
 
-os.makedirs("out_rfs_ipcw", exist_ok=True)
+os.makedirs("out_rfs_ipcw_reborn", exist_ok=True)
 log_path = "logs_rf_survival.txt"
 results  = []
 
@@ -93,11 +93,11 @@ COLORS = {"OS": "steelblue", "PFS": "tomato"}
 for marker in marker_list:
     for encoder in encoder_list:
         enc          = ENCODER_CFG[encoder]
-        features_csv = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
+        features_csv = os.path.join("data_224_reborn", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
 
         parameters = {
             'n_estimators': [100, 300, 500],
-            'max_depth': [None, 5, 20, 50],
+            'max_depth': [None, 5, 20],
             'min_samples_split': [2, 10, 20],
             'min_samples_leaf': [2, 10],
             'max_features': ['sqrt', 'log2', None],
@@ -171,10 +171,10 @@ for marker in marker_list:
             ax.set_title(f"{encoder} | {marker}")
             ax.legend()
             ax.grid(True)
-            fig.savefig(f"out_rfs_ipcw/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
+            fig.savefig(f"out_rfs_ipcw_reborn/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
             plt.close(fig)
 
-csv_path = "out_rfs_ipcw/results.csv"
+csv_path = "out_rfs_ipcw_reborn/results.csv"
 pd.DataFrame(results).to_csv(csv_path, index=False)
 print(f"\nRésultats sauvegardés → {csv_path}")
 
