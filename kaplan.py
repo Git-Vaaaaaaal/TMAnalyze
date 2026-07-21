@@ -9,8 +9,8 @@ from sksurv.nonparametric import kaplan_meier_estimator
 
 # ── Configuration ──────────────────────────────────────────────────────────
 CSV_PATH    = r"csv/IA2HL.csv"
-CSV_DLBCL   = r"csv/multiple_patient_id.csv"
-EVENT_COL   = "status"
+CSV_DLBCL   = r"csv/clinical_data_cleaned.csv"
+EVENT_COL   = "Follow-up Status"
 EVENT_COL_PFS = "PFS\ncensoring"
 TIME_COL_PFS   = "PFS\n(years)"
 EVENT_COL_OS  = "OS\ncensoring"
@@ -58,7 +58,7 @@ def plot_single_km(df, time_col, event_col, endpoint, output_path):
         idx = max(np.searchsorted(times, ct, side="right") - 1, 0)
         ax.plot(ct, surv[idx], "|", color=color, markersize=9, markeredgewidth=1.5)
 
-    ax.set_title(f"Kaplan-Meier {endpoint} - Population globale", fontsize=13)
+    ax.set_title(f"Kaplan-Meier {endpoint} - Global Population", fontsize=13)
     ax.set_xlabel("Time (years)", fontsize=11)
     ax.set_ylabel("Survival Probability", fontsize=11)
     ax.set_ylim(0, 1)
@@ -74,12 +74,20 @@ def plot_single_km(df, time_col, event_col, endpoint, output_path):
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 df_all = pd.read_csv(CSV_PATH, sep=";")
+df_dlbcl = pd.read_csv(CSV_DLBCL, sep=",")
 
 df_os  = load_marker_data(df_all.copy(), TIME_COL_OS, EVENT_COL_OS,  cap=CAP_YEARS)
 df_pfs = load_marker_data(df_all.copy(), TIME_COL_PFS, EVENT_COL_PFS, cap=CAP_YEARS)
 
+df_os_dlbcl = load_marker_data(df_dlbcl.copy(), "OS", EVENT_COL,  cap=CAP_YEARS)
+df_pfs_dlbcl = load_marker_data(df_dlbcl.copy(), "PFS", EVENT_COL, cap=CAP_YEARS)
+
+
 plot_single_km(df_os, TIME_COL_OS,  EVENT_COL_OS, "OS",  os.path.join(OUTPUT_DIR, "km_OS_ia2hl.png"))
 plot_single_km(df_pfs, TIME_COL_PFS, EVENT_COL_PFS, "PFS", os.path.join(OUTPUT_DIR, "km_PFS_ia2hl.png"))
+
+plot_single_km(df_os_dlbcl, "OS",  EVENT_COL, "OS",  os.path.join(OUTPUT_DIR, "km_OS_dlbcl.png"))
+plot_single_km(df_pfs_dlbcl, "PFS", EVENT_COL, "PFS", os.path.join(OUTPUT_DIR, "km_PFS_dlbcl.png"))
 
 print(f"\nTerminé. Graphes dans {OUTPUT_DIR}/")
 

@@ -89,7 +89,7 @@ os.makedirs("out_rfs_pca", exist_ok=True)
 log_path = "logs_rf_survival.txt"
 results  = []
 
-parameters_df = pd.read_csv("out_rfs/results.csv")
+parameters_df = pd.read_csv("out_rfs_ipcw_reborn/results.csv")
 
 COLORS = {"OS": "steelblue", "PFS": "tomato"}
 
@@ -189,7 +189,7 @@ for marker in marker_list:
             #fig.savefig(f"out_rfs_pca/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
             plt.close(fig)
 
-csv_path = "out_rfs_pca/results.csv"
+csv_path = "out_rfs_ipcw_reborn/results_pca.csv"
 pd.DataFrame(results).to_csv(csv_path, index=False)
 print(f"\nRésultats sauvegardés → {csv_path}")
 

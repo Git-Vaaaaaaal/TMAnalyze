@@ -87,7 +87,7 @@ os.makedirs("out_rfs_kfold", exist_ok=True)
 log_path = "logs_rf_survival.txt"
 results  = []
 
-parameters_df = pd.read_csv("out_rfs_ipcw/results.csv")
+parameters_df = pd.read_csv("out_rfs_ipcw_reborn/results.csv")
 
 COLORS = {"OS": "steelblue", "PFS": "tomato"}
 
@@ -195,10 +195,10 @@ for marker in marker_list:
             ax.set_title(f"{encoder} | {marker}")
             ax.legend()
             ax.grid(True)
-            fig.savefig(f"out_rfs_kfold/{marker}_{encoder}_km.png", dpi=150, bbox_inches="tight")
+            fig.savefig(f"out_rfs_ipcw_reborn/{marker}_{encoder}_kfolds.png", dpi=150, bbox_inches="tight")
             plt.close(fig)
 
-csv_path = "out_rfs_kfold/results_kfold.csv"
+csv_path = "out_rfs_ipcw_reborn/results_kfold.csv"
 pd.DataFrame(results).to_csv(csv_path, index=False)
 print(f"\nRésultats sauvegardés → {csv_path}")
 
