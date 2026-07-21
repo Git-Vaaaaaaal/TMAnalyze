@@ -93,7 +93,7 @@ COLORS = {"OS": "steelblue", "PFS": "tomato"}
 for marker in marker_list:
     for encoder in encoder_list:
         enc          = ENCODER_CFG[encoder]
-        features_csv = os.path.join("data_224", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
+        features_csv = os.path.join("data_224_reborn", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
 
         """parameters = {
             'n_estimators':      [100, 200, 300],
