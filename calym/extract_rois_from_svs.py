@@ -41,9 +41,9 @@ from PIL import Image
 # Parametres a renseigner
 # ======================================================================
 
-SVS_DIR      = r"gold"       # dossier contenant les .svs
-GEOJSON_DIR  = r"gold"   # dossier contenant les .geojson
-OUTPUT_DIR   = r"data\TMAnalyze8"    # dossier ou stocker les .tiff extraits
+SVS_DIR      = r"/gold"       # dossier contenant les .svs
+GEOJSON_DIR  = r"/gold"   # dossier contenant les .geojson
+OUTPUT_DIR   = r"/data/TMAnalyze8"    # dossier ou stocker les .tiff extraits
 
 MARGIN       = 0          # marge en pixels autour de chaque bbox
 TILE_SIZE    = 256        # taille des tuiles du TIFF de sortie
