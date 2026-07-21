@@ -14,11 +14,16 @@ Hypotheses sur les fichiers :
     standard GeoJSON), puis dans "properties" : "id", "name",
     "classification.name", "tissue_id".
 
-La magnification/mpp de la lame source est lue une seule fois (via la classe
-WSI du repo, qui gere deja le contournement du bug de metadonnees TIFF
-documente dans SITUATION_MPP.txt) puis reecrite explicitement dans les tags
-de resolution TIFF (XResolution/YResolution/ResolutionUnit) de chaque crop,
-pour que ce parametre ne se perde pas au decoupage.
+La magnification/mpp de la lame source est lue une seule fois (meme logique
+que _fetch_mpp/_fetch_magnification dans src/class_wsi_claude.py, qui gere
+deja le contournement du bug de metadonnees TIFF documente dans
+SITUATION_MPP.txt) puis reecrite explicitement dans les tags de resolution
+TIFF (XResolution/YResolution/ResolutionUnit) de chaque crop, pour que ce
+parametre ne se perde pas au decoupage.
+
+Ce script n'utilise que openslide (pas de dependance a torch/trident), pour
+pouvoir tourner meme sur une machine ou l'installation PyTorch/CUDA est
+cassee.
 
 Usage : renseigner les variables ci-dessous puis lancer
     python calym/extract_rois_from_svs.py
@@ -26,9 +31,9 @@ Usage : renseigner les variables ci-dessous puis lancer
 
 import json
 import os
-import sys
 
 import numpy as np
+import openslide
 import tifffile
 from PIL import Image
 
@@ -50,12 +55,74 @@ JPEG_QUALITY = 90         # utilise seulement si COMPRESSION == "jpeg"
 # Autorise les tres grands crops (lames medicales) sans avertissement PIL.
 Image.MAX_IMAGE_PIXELS = None
 
-# Permet de lancer le script depuis n'importe quel repertoire courant.
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
 
-from src.class_wsi_claude import WSI  # noqa: E402
+def fetch_mpp(slide: openslide.OpenSlide, custom_mpp_keys: list[str] | None = None) -> float:
+    """Extrait le mpp (microns/pixel) des metadonnees OpenSlide.
+
+    Meme logique que WSI._fetch_mpp dans src/class_wsi_claude.py (dont le
+    fallback tiff.XResolution/ResolutionUnit contourne le bug documente
+    dans SITUATION_MPP.txt), reimplementee ici sans dependre de torch.
+    """
+    mpp_keys = [
+        openslide.PROPERTY_NAME_MPP_X,
+        "openslide.mirax.MPP",
+        "aperio.MPP",
+        "hamamatsu.XResolution",
+        "openslide.comment",
+    ]
+    if custom_mpp_keys:
+        mpp_keys.extend(custom_mpp_keys)
+
+    for key in mpp_keys:
+        if key in slide.properties:
+            try:
+                return round(float(slide.properties[key]), 4)
+            except ValueError:
+                continue
+
+    x_res = slide.properties.get("tiff.XResolution")
+    unit = slide.properties.get("tiff.ResolutionUnit")
+    if x_res and unit:
+        try:
+            if unit.lower() == "centimeter":
+                return round(10_000 / float(x_res), 4)
+            elif unit.upper() == "INCH":
+                return round(25_400 / float(x_res), 4)
+        except ValueError:
+            pass
+
+    raise ValueError(
+        "Impossible d'extraire le mpp des metadonnees de la lame. "
+        "Fournir custom_mpp_keys ou corriger les tags de la lame."
+    )
+
+
+def fetch_magnification(slide: openslide.OpenSlide, mpp: float | None) -> int:
+    """Estime la magnification a partir du mpp (ou, a defaut, des metadonnees OpenSlide)."""
+    if mpp is not None:
+        if mpp < 0.16:
+            return 80
+        elif mpp < 0.2:
+            return 60
+        elif mpp < 0.3:
+            return 40
+        elif mpp < 0.6:
+            return 20
+        elif mpp < 1.2:
+            return 10
+        elif mpp < 2.4:
+            return 5
+        else:
+            raise ValueError(f"Valeur de mpp inattendue (trop grande) : {mpp}")
+
+    meta_mag = slide.properties.get(openslide.PROPERTY_NAME_OBJECTIVE_POWER)
+    if meta_mag is not None:
+        try:
+            return int(meta_mag)
+        except ValueError:
+            pass
+
+    raise ValueError("Impossible de determiner la magnification de la lame.")
 
 
 # Ordre de priorite pour trouver l'identifiant d'une region. Les exports
@@ -177,12 +244,14 @@ def process_pair(
         print(f"[SKIP] {geojson_path} : aucune feature")
         return 0
 
-    wsi = WSI(slide_path=svs_path, lazy_init=True)
-    wsi._lazy_initialize()
-    slide_w, slide_h = wsi.get_dimensions()
+    name = os.path.splitext(os.path.basename(svs_path))[0]
+    slide = openslide.OpenSlide(svs_path)
+    slide_w, slide_h = slide.dimensions
+    mpp = fetch_mpp(slide)
+    mag = fetch_magnification(slide, mpp)
     print(
-        f"[{wsi.name}] {slide_w}x{slide_h}px  mpp={wsi.mpp}  "
-        f"magnification={wsi.mag}x  ({len(features)} region(s) a extraire)"
+        f"[{name}] {slide_w}x{slide_h}px  mpp={mpp}  "
+        f"magnification={mag}x  ({len(features)} region(s) a extraire)"
     )
 
     n_saved = 0
@@ -194,7 +263,7 @@ def process_pair(
                 print(f"  [SKIP] feature {idx} : geometrie manquante/invalide")
                 continue
 
-            roi_id = resolve_feature_id(feature, fallback=f"{wsi.name}_{idx}")
+            roi_id = resolve_feature_id(feature, fallback=f"{name}_{idx}")
 
             # Meme id reutilise (ex: cores repliques d'un meme patient) -> on suffixe
             # pour ne pas ecraser le fichier precedent.
@@ -215,16 +284,16 @@ def process_pair(
                 print(f"  [SKIP] '{roi_id}' : bbox degeneree ou hors limites")
                 continue
 
-            region = wsi.read_region((x, y), level=0, size=(w, h), read_as="numpy")
+            region = np.array(slide.read_region((x, y), 0, (w, h)).convert("RGB"))
 
             out_path = os.path.join(output_dir, f"{roi_id}.tiff")
             save_region_as_tiff(
-                region, out_path, wsi.mpp, wsi.mag, tile_size, compression, jpeg_quality
+                region, out_path, mpp, mag, tile_size, compression, jpeg_quality
             )
             print(f"  [OK] '{roi_id}' -> {out_path}  ({w}x{h}px)")
             n_saved += 1
     finally:
-        wsi.release()
+        slide.close()
 
     return n_saved
 
