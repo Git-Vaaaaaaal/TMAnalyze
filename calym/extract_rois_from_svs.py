@@ -43,7 +43,8 @@ from PIL import Image
 
 SVS_DIR      = r"/gold"       # dossier contenant les .svs
 GEOJSON_DIR  = r"/gold"   # dossier contenant les .geojson
-OUTPUT_DIR   = r"/data/TMAnalyze8"    # dossier ou stocker les .tiff extraits
+OUTPUT_DIR   = r"/data/TMAnalyze/img"    # dossier ou stocker les .tiff extraits
+os.makedirs(OUTPUT_DIR, exist_ok=True)  # cree le dossier si inexistant
 
 MARGIN       = 0          # marge en pixels autour de chaque bbox
 TILE_SIZE    = 256        # taille des tuiles du TIFF de sortie
@@ -125,11 +126,11 @@ def fetch_magnification(slide: openslide.OpenSlide, mpp: float | None) -> int:
     raise ValueError("Impossible de determiner la magnification de la lame.")
 
 
-# Ordre de priorite pour trouver l'identifiant d'une region. Les exports
-# QuPath (annotations TMA) mettent le nom lisible dans properties.name
-# (ex: "13/704") ; le "id" au niveau Feature est un UUID auto-genere, pas
-# pense pour servir de nom de fichier, donc il passe en tout dernier recours.
-ID_PROPERTY_CANDIDATES = ["name", "classification.name", "tissue_id", "id"]
+# Ordre de priorite pour trouver l'identifiant d'une region : le "id" au
+# niveau Feature (ex: "afea49d8-9512-4abc-af17-b36ea6d138a2") est
+# l'identifiant voulu pour le nom de fichier. Les cles de "properties" ne
+# servent qu'en secours si jamais un Feature n'a pas de "id".
+ID_PROPERTY_CANDIDATES = ["name", "classification.name", "tissue_id"]
 
 _UNSAFE_FILENAME_CHARS = '/\\:*?"<>|'
 
@@ -143,6 +144,9 @@ def sanitize_filename(value: str) -> str:
 
 def resolve_feature_id(feature: dict, fallback: str) -> str:
     """Cherche un identifiant pour ce Feature dans un ordre de cles connu."""
+    if "id" in feature and feature["id"] not in (None, ""):
+        return sanitize_filename(str(feature["id"]))
+
     props = feature.get("properties", {}) or {}
     for key in ID_PROPERTY_CANDIDATES:
         if key == "classification.name":
@@ -151,9 +155,6 @@ def resolve_feature_id(feature: dict, fallback: str) -> str:
             value = props.get(key)
         if value not in (None, ""):
             return sanitize_filename(str(value))
-
-    if "id" in feature and feature["id"] not in (None, ""):
-        return sanitize_filename(str(feature["id"]))
 
     return fallback
 
