@@ -397,7 +397,7 @@ class Processor:
         coords_dir: str, 
         patch_encoder: torch.nn.Module, 
         device: str,  
-        batch_limit: int = 512, 
+        batch_limit: int = 4096, 
     ) -> str:
         self.run_patch_feature_extraction_job(
             coords_dir, 
@@ -412,7 +412,7 @@ class Processor:
         patch_size: int,
         target_mag: int,
         device: str,
-        batch_limit: int = 640,
+        batch_limit: int = 4096,
     ) -> str:
 
         save_dir = os.path.join(self.job_dir, f'features_{patch_encoder.enc_name}')
@@ -490,7 +490,7 @@ class Processor:
         target_mag: int,
         slide_model: str,
         device: str = 'cuda',
-        batch_limit: int = 512,
+        batch_limit: int = 4096,
         saveto: str | None = None,
     ) -> str:
         
