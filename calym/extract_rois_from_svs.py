@@ -31,6 +31,7 @@ Usage : renseigner les variables ci-dessous puis lancer
 
 import json
 import os
+import re
 
 import numpy as np
 import openslide
@@ -126,11 +127,13 @@ def fetch_magnification(slide: openslide.OpenSlide, mpp: float | None) -> int:
     raise ValueError("Impossible de determiner la magnification de la lame.")
 
 
-# Ordre de priorite pour trouver l'identifiant d'une region : le "id" au
-# niveau Feature (ex: "afea49d8-9512-4abc-af17-b36ea6d138a2") est
-# l'identifiant voulu pour le nom de fichier. Les cles de "properties" ne
-# servent qu'en secours si jamais un Feature n'a pas de "id".
-ID_PROPERTY_CANDIDATES = ["name", "classification.name", "tissue_id"]
+# Les annotations qui delimitent un noyau de patient portent, dans
+# properties.metadata.ANNOTATION_DESCRIPTION, une ligne du type
+# "Patient_id = 13/704-01-02". Seul le prefixe "13/704" (avant le numero de
+# bloc/lame) sert d'identifiant patient ; les annotations d'autres tissus
+# (controles : "Tissu = Rein", "Tissu = Amygdale 1", ...) n'ont pas cette
+# ligne et doivent etre ignorees.
+PATIENT_ID_RE = re.compile(r"Patient_id\s*=\s*([\d/]+)")
 
 _UNSAFE_FILENAME_CHARS = '/\\:*?"<>|'
 
@@ -142,21 +145,16 @@ def sanitize_filename(value: str) -> str:
     return value.strip()
 
 
-def resolve_feature_id(feature: dict, fallback: str) -> str:
-    """Cherche un identifiant pour ce Feature dans un ordre de cles connu."""
-    if "id" in feature and feature["id"] not in (None, ""):
-        return sanitize_filename(str(feature["id"]))
-
+def resolve_patient_id(feature: dict) -> str | None:
+    """Extrait le Patient_id depuis ANNOTATION_DESCRIPTION, ou None si absent."""
     props = feature.get("properties", {}) or {}
-    for key in ID_PROPERTY_CANDIDATES:
-        if key == "classification.name":
-            value = (props.get("classification") or {}).get("name")
-        else:
-            value = props.get(key)
-        if value not in (None, ""):
-            return sanitize_filename(str(value))
+    metadata = props.get("metadata", {}) or {}
+    description = metadata.get("ANNOTATION_DESCRIPTION", "")
 
-    return fallback
+    match = PATIENT_ID_RE.search(description)
+    if match is None:
+        return None
+    return sanitize_filename(match.group(1))
 
 
 def feature_bbox(feature: dict) -> tuple[float, float, float, float] | None:
@@ -259,12 +257,16 @@ def process_pair(
     seen_ids: dict[str, int] = {}
     try:
         for idx, feature in enumerate(features):
-            bbox = feature_bbox(feature)
-            if bbox is None:
-                print(f"  [SKIP] feature {idx} : geometrie manquante/invalide")
+            roi_id = resolve_patient_id(feature)
+            if roi_id is None:
+                print(f"  [SKIP] feature {idx} : pas de 'Patient_id' dans ANNOTATION_DESCRIPTION "
+                      f"(autre tissu, ex: controle)")
                 continue
 
-            roi_id = resolve_feature_id(feature, fallback=f"{name}_{idx}")
+            bbox = feature_bbox(feature)
+            if bbox is None:
+                print(f"  [SKIP] '{roi_id}' (feature {idx}) : geometrie manquante/invalide")
+                continue
 
             # Meme id reutilise (ex: cores repliques d'un meme patient) -> on suffixe
             # pour ne pas ecraser le fichier precedent.
