@@ -17,7 +17,8 @@ embed_path = "embedding"
 os.makedirs(embed_path, exist_ok=True)
 
 for slide_encoder in list_slide_encoder :
-    img_path = os.path.join("data", "TMAnalyze", "img")
+    #img_path = os.path.join("data", "TMAnalyze", "img")
+    img_path = "/data/TMAnalyze/img"
     path = os.path.join(embed_path, f"{slide_encoder}")
     os.makedirs(path, exist_ok=True)
     #Partie 1 : Embeddings
