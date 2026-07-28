@@ -1,5 +1,15 @@
 import os
 
+# Le disque systeme (/tmp) est sature : multiprocessing/tempfile (utilises par
+# le DataLoader) y ecrivent par defaut -> "No space left on device". On
+# redirige vers /data qui a de la place, avant tout import qui pourrait
+# resoudre le repertoire temporaire.
+os.environ.setdefault("TMPDIR", "/data/TMAnalyze/tmp")
+os.makedirs(os.environ["TMPDIR"], exist_ok=True)
+
+
+
+
 # Cache local pour les poids HuggingFace (voir download_models.py).
 # Respecte HF_HOME si deja exporte dans le shell, sinon utilise ce chemin par defaut.
 os.environ.setdefault("HF_HOME", "/data/TMAnalyze/hf_cache")
