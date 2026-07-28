@@ -40,3 +40,4 @@ export.zip
 /out_rfs_kfold
 /out_rfs_pca
 *.zip
+/csv_calym

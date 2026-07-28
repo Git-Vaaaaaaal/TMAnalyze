@@ -1,8 +1,13 @@
+import os
+
+# Cache local pour les poids HuggingFace (voir download_models.py).
+# Respecte HF_HOME si deja exporte dans le shell, sinon utilise ce chemin par defaut.
+os.environ.setdefault("HF_HOME", "/data/TMAnalyze/hf_cache")
+
 from src.embedding import running_patch_embedding
 from src.embedding import running_slide_embedding
 from src.class_embedding import Processor
 import torch
-import os
 
 from huggingface_hub import login
 from env import hf_token
@@ -10,7 +15,7 @@ from env import hf_token
 login(hf_token)
 
 #list_slide_encoder = ["prism"] #"prism"
-list_slide_encoder = ["gpfm", "openmidnight", "virchow2", "prism", "feather", "hibou_l", "musk", ]# "hoptimus1" prism", "feather", "titan"]
+list_slide_encoder = ["openmidnight", "virchow2", "prism", "feather", "hibou_l", "musk", ]# "hoptimus1" prism", "feather", "titan"]
 slide_list = ["prism",  "feather"]
 
 embed_path = "embedding"
