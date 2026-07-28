@@ -1,0 +1,35 @@
+Fix incompatibilite torch / NCCL (undefined symbol: ncclCommResume)
+=====================================================================
+A executer sur calymprdube, dans /data/TMAnalyze, venv active
+(source tmanalyze_venv/bin/activate)
+
+1) Desinstaller torch + tout le stack nvidia-* actuel (pour eviter un
+   melange de versions incoherentes) :
+
+pip uninstall -y torch torchvision torchaudio \
+  nvidia-cublas-cu12 nvidia-cuda-cupti-cu12 nvidia-cuda-nvrtc-cu12 nvidia-cuda-runtime-cu12 \
+  nvidia-cudnn-cu12 nvidia-cufft-cu12 nvidia-cufile-cu12 nvidia-curand-cu12 \
+  nvidia-cusolver-cu12 nvidia-cusparse-cu12 nvidia-cusparselt-cu12 \
+  nvidia-nccl-cu12 nvidia-nvjitlink-cu12 nvidia-nvshmem-cu12 nvidia-nvtx-cu12
+
+2) Vider le cache pip :
+
+pip cache purge
+
+3) Reinstaller torch proprement (laisser pip resoudre lui-meme la bonne
+   version de chaque paquet nvidia-*, ne pas les fixer a la main) :
+
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+
+4) Verifier que torch charge bien CUDA :
+
+python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+
+5) Relancer le pipeline :
+
+python pipeline_calym.py
+
+6) Une fois que ca fonctionne, figer les versions qui marchent
+   (a coller dans requirements.txt) :
+
+pip freeze | grep -iE "^torch|^nvidia-"
