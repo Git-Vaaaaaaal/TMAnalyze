@@ -15,7 +15,7 @@ from env import hf_token
 login(hf_token)
 
 #list_slide_encoder = ["prism"] #"prism"
-list_slide_encoder = ["openmidnight", "virchow2", "prism", "feather", "hibou_l", "musk", ]# "hoptimus1" prism", "feather", "titan"]
+list_slide_encoder = ["prism", "feather", "hibou_l", "musk", ]# "hoptimus1" prism", "feather", "titan"]
 slide_list = ["prism",  "feather"]
 
 embed_path = "embedding"
