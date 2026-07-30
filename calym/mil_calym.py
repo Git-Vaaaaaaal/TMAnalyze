@@ -1,0 +1,243 @@
+import os
+import numpy as np
+import torch
+import pandas as pd
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from torch.utils.data import DataLoader, random_split
+from torchmil.data import collate_fn
+
+from src.training_mil import run_epoch, plot_accuracy_curves, plot_confusion_matrix
+from src.dataloader import build_dataloaders, build_model
+from src.evaluation import evaluate, generate_heatmaps
+from calym.cleaning_csv_calym import cleaning_csv
+
+
+
+"""
+dropped_column = ["patient_id", "old_patient_id", "stain", "Age", "Status", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
+                "OS", "PFS"]
+"""
+
+# --- Sharding multi-GPU -------------------------------------------------
+# Chaque processus traite les combinaisons dont (index % NUM_SHARDS) == SHARD_ID.
+# Lancé par le .slurm avec un process par GPU (CUDA_VISIBLE_DEVICES isolant 1 GPU).
+SHARD_ID    = int(os.environ.get("SHARD_ID", "0"))
+NUM_SHARDS  = int(os.environ.get("NUM_SHARDS", "1"))
+NUM_WORKERS = int(os.environ.get("NUM_WORKERS", "4"))
+
+
+
+dataframe_id = os.path.join("csv_calym", "ia2hl_clinical.csv")
+
+encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism", "titan", "feather"]
+
+mil_list = ["abmil", "dsmil", "clam"] #"abmil", "dsmil", "clam",
+
+status_list = ["IPS group", "Stage IIB", "Stage IV", "Performance status (ECOG)", "LDH", "WBC (G/L)", 
+               "Lymphocytes counts (G/L)","Hemoglobin (g/dL)", "Serum Albumin (g/L)"] #["IPI Score", "IPI Risk Group (4 Class)", "ECOG PS", "LDH", "Stage"]
+
+status_dict = {
+    "IPS group": {
+        "label": "IPS group",
+        "group_0": ["0-2"],
+        "group_1": [">= 3"],
+    },
+    "Stage IIB": {
+        "label": "Stage IIB",
+        "group_0": ["No"],
+        "group_1": ["Yes"]
+    },
+    "Stage IV": {
+        "label": "Stage IV",
+        "group_0": ["No"],
+        "group_1": ["Yes"]
+    },
+    "Performance status (ECOG)": {
+        "label": "Performance status (ECOG)",
+        "group_0": [0],
+        "group_1": [1, 2]
+        },
+    "LDH": {
+        "label": "LDH",
+        "group_0": ["Normal"],
+        "group_1": ["> Upper limit"]
+        },
+    "WBC (G/L)": {
+        "label": "WBC (G/L)",
+        "group_0": ["< 15"],
+        "group_1": [">= 15"]
+        },
+    "Lymphocytes counts (G/L)": {
+        "label": "Lymphocytes counts (G/L)",
+        "group_0": ["< 0.6"],
+        "group_1": [">= 0.6"]
+        },
+    "Hemoglobin (g/dL)": {
+        "label": "Hemoglobin (g/dL)",
+        "group_0": ["< 10.5"],
+        "group_1": [">= 10.5"]
+        },
+    "Serum Albumin (g/L)": {
+        "label": "Serum Albumin (g/L)",
+        "group_0": ["< 40"],
+        "group_1": [">= 40"]
+        }
+}
+
+ENCODER_CFG = {
+    "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
+    "titan":   dict(in_shape=768,  tiles_subdir="features_conch_v15", slide_subdir="slide_features_titan",  slide_csv="titan_encoder.csv"),
+    "feather": dict(in_shape=768,  tiles_subdir="features_conch_v15", slide_subdir="slide_features_feather", slide_csv="feather_encoder.csv"),
+    "gpfm": dict(in_shape=1024,  tiles_subdir="features_gpfm", slide_subdir="", slide_csv=""),
+    "musk": dict(in_shape=1024,  tiles_subdir="features_musk", slide_subdir="", slide_csv=""),
+    "openmidnight": dict(in_shape=1536,  tiles_subdir="features_openmidnight", slide_subdir="", slide_csv=""),
+    "hibou_l": dict(in_shape=1024,  tiles_subdir="features_hibou_l", slide_subdir="", slide_csv=""),
+    "virchow2": dict(in_shape=2560,  tiles_subdir="features_virchow2", slide_subdir="", slide_csv=""),
+}
+
+
+from itertools import product
+
+
+def train(cfg, model, optimizer, scheduler, train_loader, val_loader, run_label, log_path):
+    history      = {k: [] for k in ["train_loss", "val_loss", "train_acc", "val_acc", "train_auc", "val_auc", "train_ap", "val_ap"]}
+    best_val_auc = -1.0
+    best_epoch   = 0
+    best_model_path = os.path.join(cfg["output_dir"], "best_model.pth")
+
+    with open(log_path, "w", buffering=1) as log:
+        header = f"=== {run_label} ===\n"
+        print(header, end="")
+        log.write(header)
+
+        for epoch in range(1, cfg["epochs"] + 1):
+            train_metrics, _ = run_epoch(model, train_loader, optimizer, cfg["device"], train=True)
+            val_metrics, _   = run_epoch(model, val_loader,   optimizer, cfg["device"], train=False)
+            scheduler.step()
+
+            for phase, m in [("train", train_metrics), ("val", val_metrics)]:
+                for key in ["loss", "acc", "auc", "ap"]:
+                    history[f"{phase}_{key}"].append(m[key])
+
+            line = (
+                f"Epoch {epoch:03d}/{cfg['epochs']} | "
+                f"Train — loss: {train_metrics['loss']:.4f}  acc: {train_metrics['acc']:.3f}  AUC: {train_metrics['auc']:.3f} | "
+                f"Val   — loss: {val_metrics['loss']:.4f}  acc: {val_metrics['acc']:.3f}  AUC: {val_metrics['auc']:.3f}\n"
+            )
+            print(line, end="")
+            log.write(line)
+
+            if val_metrics["auc"] > best_val_auc:
+                best_val_auc = val_metrics["auc"]
+                best_epoch   = epoch
+                torch.save(model.state_dict(), best_model_path)
+
+        summary = f"\nMeilleur epoch {best_epoch} — val AUC: {best_val_auc:.4f} — checkpoint: {best_model_path}\n"
+        print(summary, end="")
+        log.write(summary)
+
+    return history, best_epoch, best_val_auc
+
+
+# ======================================================================
+# Main — sharding
+# ======================================================================
+
+all_combinations = list(product(encoder_list, mil_list, status_list))
+my_combinations  = [(idx, combo) for idx, combo in enumerate(all_combinations) if idx % NUM_SHARDS == SHARD_ID]
+
+print(f"[Shard {SHARD_ID}/{NUM_SHARDS}] {len(all_combinations)} combinaisons totales, "
+      f"{len(my_combinations)} assignees a ce shard.")
+
+os.makedirs("output_calym/mil", exist_ok=True)
+accuracy_log_path = os.path.join("output_calym/mil", "accuracy_summary.txt")
+with open(accuracy_log_path, "w") as f:
+    f.write("run_label\ttrain_acc\ttest_acc\n")
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+if torch.cuda.is_available():
+    print(f"GPU : {torch.cuda.get_device_name(0)}")
+
+for idx, (encoder, mil, status) in my_combinations:
+    enc       = ENCODER_CFG[encoder]
+    run_dir   = os.path.join("output_calym", "mil", encoder, mil, status)
+    run_label = f"{status} | {encoder} | {mil}"
+    os.makedirs(run_dir, exist_ok=True)
+
+    out_csv_marker, df_status = cleaning_csv(dataframe_id, encoder, status,
+                                            group_0=status_dict[status]["group_0"],
+                                            group_1=status_dict[status]["group_1"])
+    if df_status.empty:
+        print(f"[SKIP] pas de patients valides pour {run_label}")
+        continue
+    n_classes  = int(df_status["Status"].nunique())
+    type_class = "binary" if n_classes == 2 else "multi_class"
+
+    tiles_dir = os.path.join("embedding", encoder,  enc["tiles_subdir"])
+    if not os.path.isdir(tiles_dir):
+        print(f"[SKIP] tiles_dir introuvable : {tiles_dir}")
+        continue
+
+    slide_features_csv = None
+    bag_keys           = ["X", "Y", "coords"]
+    if enc["slide_csv"]:
+        candidate = os.path.join("embedding", encoder, enc["slide_subdir"], enc["slide_csv"])
+        if os.path.isfile(candidate):
+            slide_features_csv = candidate
+            bag_keys           = ["X", "X_slide", "Y", "coords"]
+
+    if mil in ("patchgcn", "deepgraphsurv"):
+        bag_keys.append("adj")
+
+    CFG = dict(
+        slide_features_csv = slide_features_csv,
+        slide_id_col       = "wsi_name",
+        tiles_dir          = tiles_dir,
+        labels_csv         = out_csv_marker,
+        bag_keys           = bag_keys,
+        model_mil          = mil,
+        in_shape           = (enc["in_shape"],),
+        lr                 = 1e-4,
+        epochs             = 150,
+        batch_size         = 1024,
+        val_split          = 0.15,
+        test_split         = 0.15,
+        device             = str(device),
+        output_dir         = run_dir,
+        seed               = 42,
+        type_class         = type_class,
+        n_classes          = n_classes,
+    )
+
+    print(f"\n{'='*60}")
+    print(f"  [{idx+1}/{len(all_combinations)}] {run_label}")
+    print(f"  Device : {device}  |  Output : {run_dir}")
+    print(f"{'='*60}")
+
+    torch.manual_seed(CFG["seed"])
+
+    try:
+        train_loader, val_loader, test_loader = build_dataloaders(CFG)
+    except ValueError as e:
+        print(f"[SKIP] {e}")
+        continue
+    model, optimizer, scheduler       = build_model(CFG)
+    history, best_epoch, best_val_auc = train(
+        CFG, model, optimizer, scheduler, train_loader, val_loader,
+        run_label, os.path.join(run_dir, "training_log.txt"),
+    )
+    final_tracker = evaluate(CFG, model, test_loader, optimizer)
+
+    train_acc = history["train_acc"][best_epoch - 1]
+    test_acc  = (np.array(final_tracker.targets) == np.array(final_tracker.preds)).mean()
+    with open(accuracy_log_path, "a") as f:
+        f.write(f"{run_label}\t{train_acc:.4f}\t{test_acc:.4f}\n")
+
+    plot_accuracy_curves(history, best_epoch,   os.path.join(run_dir, "accuracy_curves.png"))
+    plot_confusion_matrix(final_tracker,         os.path.join(run_dir, "confusion_matrix.png"))
+    #generate_heatmaps(CFG, model)
+
+
+

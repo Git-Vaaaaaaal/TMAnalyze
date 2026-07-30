@@ -131,6 +131,6 @@ for encoder in encoder_list:
         plt.close(fig)
 
 df_cox = pd.DataFrame(cox_results)
-df_cox.to_csv("kmeans/cox_results_age.csv", index=False)
+df_cox.to_csv("output_calym/kmeans/cox_results_age.csv", index=False)
 print("\nRésultats Cox → kmeans/cox_results_age.csv")
 print(df_cox.to_string(index=False))
