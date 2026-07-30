@@ -8,10 +8,10 @@ import pandas as pd
 IMAGES_DIR = "/data/TMAnalyze/img"
 IMAGE_EXTENSION = ".tiff"
 
-CLINICAL_CSV_PATH = "csv_calym/merged_calym.csv"
+CLINICAL_CSV_PATH = "/data/TMAnalyze/csv_calym/merged_calym.csv"
 CLINICAL_ID_COLUMN = "patient_id"
 
-OUTPUT_PATH = "csv_calym/ia2hl_clinical.csv"
+OUTPUT_PATH = "/data/TMAnalyze/csv_calym/ia2hl_clinical.csv"
 
 
 def normalize_patient_id(patient_id: str) -> str:
