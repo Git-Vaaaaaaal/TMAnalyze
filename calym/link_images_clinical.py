@@ -8,7 +8,7 @@ import pandas as pd
 IMAGES_DIR = "/data/TMAnalyze/img"
 IMAGE_EXTENSION = ".tiff"
 
-CLINICAL_CSV_PATH = "csv_calym/merged_clinicals.csv"
+CLINICAL_CSV_PATH = "csv_calym/merged_calym.csv"
 CLINICAL_ID_COLUMN = "patient_id"
 
 OUTPUT_PATH = "csv_calym/ia2hl_clinical.csv"
