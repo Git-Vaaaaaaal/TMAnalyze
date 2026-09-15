@@ -8,14 +8,12 @@ from sksurv.nonparametric import kaplan_meier_estimator
 
 
 # ── Configuration ──────────────────────────────────────────────────────────
-CSV_PATH    = r"csv/IA2HL.csv"
-CSV_DLBCL   = r"csv/clinical_data_cleaned.csv"
-EVENT_COL   = "Follow-up Status"
-EVENT_COL_PFS = "PFS\ncensoring"
-TIME_COL_PFS   = "PFS\n(years)"
-EVENT_COL_OS  = "OS\ncensoring"
-TIME_COL_OS = "Overall\nsurvival\n(years)"
-OUTPUT_DIR  = "out_kaplan"
+CSV_PATH    = r"csv/IA2HL.csv"  # Path to the CSV file containing the data
+EVENT_COL_PFS = "PFS\ncensoring"  # Column name for PFS event data in the CSV
+TIME_COL_PFS   = "PFS\n(years)"  # Column name for PFS time data in the CSV
+EVENT_COL_OS  = "OS\ncensoring"  # Column name for OS event data in the CSV
+TIME_COL_OS = "Overall\nsurvival\n(years)"  # Column name for OS time data in the CSV
+OUTPUT_DIR  = "out_kaplan"  # Output directory for kaplan-meier plots
 CAP_YEARS   = 5.0
 # ───────────────────────────────────────────────────────────────────────────
 
@@ -72,22 +70,16 @@ def plot_single_km(df, time_col, event_col, endpoint, output_path):
 
 # ── Main ───────────────────────────────────────────────────────────────────
 
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 df_all = pd.read_csv(CSV_PATH, sep=";")
-df_dlbcl = pd.read_csv(CSV_DLBCL, sep=",")
 
 df_os  = load_marker_data(df_all.copy(), TIME_COL_OS, EVENT_COL_OS,  cap=CAP_YEARS)
 df_pfs = load_marker_data(df_all.copy(), TIME_COL_PFS, EVENT_COL_PFS, cap=CAP_YEARS)
 
-df_os_dlbcl = load_marker_data(df_dlbcl.copy(), "OS", EVENT_COL,  cap=CAP_YEARS)
-df_pfs_dlbcl = load_marker_data(df_dlbcl.copy(), "PFS", EVENT_COL, cap=CAP_YEARS)
-
 
 plot_single_km(df_os, TIME_COL_OS,  EVENT_COL_OS, "OS",  os.path.join(OUTPUT_DIR, "km_OS_ia2hl.png"))
 plot_single_km(df_pfs, TIME_COL_PFS, EVENT_COL_PFS, "PFS", os.path.join(OUTPUT_DIR, "km_PFS_ia2hl.png"))
-
-plot_single_km(df_os_dlbcl, "OS",  EVENT_COL, "OS",  os.path.join(OUTPUT_DIR, "km_OS_dlbcl.png"))
-plot_single_km(df_pfs_dlbcl, "PFS", EVENT_COL, "PFS", os.path.join(OUTPUT_DIR, "km_PFS_dlbcl.png"))
 
 print(f"\nTerminé. Graphes dans {OUTPUT_DIR}/")
 

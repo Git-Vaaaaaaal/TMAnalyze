@@ -11,14 +11,8 @@ from torchmil.data import collate_fn
 from src.training_mil import run_epoch, plot_accuracy_curves, plot_confusion_matrix
 from src.dataloader import build_dataloaders, build_model
 from src.evaluation import evaluate, generate_heatmaps
-from calym.cleaning_csv_calym import cleaning_csv
+from src.csv_status import cleaning_csv
 
-
-
-"""
-dropped_column = ["patient_id", "old_patient_id", "stain", "Age", "Status", "ECOG PS", "LDH", "EN", "Stage", "IPI Score", "IPI Risk Group (4 Class)", "RIPI Risk Group",
-                "OS", "PFS"]
-"""
 
 # --- Sharding multi-GPU -------------------------------------------------
 # Chaque processus traite les combinaisons dont (index % NUM_SHARDS) == SHARD_ID.
@@ -27,65 +21,49 @@ SHARD_ID    = int(os.environ.get("SHARD_ID", "0"))
 NUM_SHARDS  = int(os.environ.get("NUM_SHARDS", "1"))
 NUM_WORKERS = int(os.environ.get("NUM_WORKERS", "4"))
 
+# Marker parameters of datasets
+marker_list = ["HE", "BCL2", "BCL6", "CD10", "MUM1", "MYC"]
 
+# Clinical data 
+dataframe_id = os.path.join("csv", "multi_label_patient_id.csv")
 
-dataframe_id = os.path.join("csv_calym", "ia2hl_clinical.csv")
+# Encoder, MIL model and status parameters
+encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"]
+mil_list = ["abmil", "dsmil", "clam"]
+status_list = ["IPI Score", "IPI Risk Group (4 Class)", "ECOG PS", "LDH", "Stage"]
 
-encoder_list = ["gpfm", "virchow2", "openmidnight", "musk", "hibou_l"] #["prism", "titan", "feather"]
-
-mil_list = ["abmil", "dsmil", "clam"] #"abmil", "dsmil", "clam",
-
-status_list = ["IPS group", "Stage IIB", "Stage IV", "Performance status (ECOG)", "LDH", "WBC (G/L)", 
-               "Lymphocytes counts (G/L)","Hemoglobin (g/dL)", "Serum Albumin (g/L)"] #["IPI Score", "IPI Risk Group (4 Class)", "ECOG PS", "LDH", "Stage"]
-
+# Group to binarize value of different columns of clinical data
 status_dict = {
-    "IPS group": {
-        "label": "IPS group",
-        "group_0": ["0-2"],
-        "group_1": [">= 3"],
+    "IPI Score": {
+        "label": "IPI Score",
+        "group_0": [0, 1, 2],
+        "group_1": [3, 4, 5],
     },
-    "Stage IIB": {
-        "label": "Stage IIB",
-        "group_0": ["No"],
-        "group_1": ["Yes"]
-    },
-    "Stage IV": {
-        "label": "Stage IV",
-        "group_0": ["No"],
-        "group_1": ["Yes"]
-    },
-    "Performance status (ECOG)": {
-        "label": "Performance status (ECOG)",
+    "IPI Risk Group (4 Class)": {
+        "label": "IPI Risk Group (4 Class)",
         "group_0": [0],
-        "group_1": [1, 2]
+        "group_1": [1, 2, 3]
+        },
+    "ECOG PS": {
+        "label": "ECOG PS",
+        "group_0": [0],
+        "group_1": [1, 2, 3]
         },
     "LDH": {
         "label": "LDH",
-        "group_0": ["Normal"],
-        "group_1": ["> Upper limit"]
+        "group_0": [0],
+        "group_1": [1]
         },
-    "WBC (G/L)": {
-        "label": "WBC (G/L)",
-        "group_0": ["< 15"],
-        "group_1": [">= 15"]
+    "Stage": {
+        "label": "Stage",
+        "group_0": [1, 2],
+        "group_1": [3, 4]
         },
-    "Lymphocytes counts (G/L)": {
-        "label": "Lymphocytes counts (G/L)",
-        "group_0": ["< 0.6"],
-        "group_1": [">= 0.6"]
-        },
-    "Hemoglobin (g/dL)": {
-        "label": "Hemoglobin (g/dL)",
-        "group_0": ["< 10.5"],
-        "group_1": [">= 10.5"]
-        },
-    "Serum Albumin (g/L)": {
-        "label": "Serum Albumin (g/L)",
-        "group_0": ["< 40"],
-        "group_1": [">= 40"]
-        }
 }
 
+
+
+# Parameters for the encoder models (shape, path to tiles, path to slide features, csv_files (if slide encoder))
 ENCODER_CFG = {
     "prism":   dict(in_shape=2560, tiles_subdir="features_virchow",   slide_subdir="slide_features_prism",  slide_csv="prism_encoder.csv"),
     "titan":   dict(in_shape=768,  tiles_subdir="features_conch_v15", slide_subdir="slide_features_titan",  slide_csv="titan_encoder.csv"),
@@ -105,7 +83,6 @@ def train(cfg, model, optimizer, scheduler, train_loader, val_loader, run_label,
     history      = {k: [] for k in ["train_loss", "val_loss", "train_acc", "val_acc", "train_auc", "val_auc", "train_ap", "val_ap"]}
     best_val_auc = -1.0
     best_epoch   = 0
-    best_model_path = os.path.join(cfg["output_dir"], "best_model.pth")
 
     with open(log_path, "w", buffering=1) as log:
         header = f"=== {run_label} ===\n"
@@ -132,9 +109,8 @@ def train(cfg, model, optimizer, scheduler, train_loader, val_loader, run_label,
             if val_metrics["auc"] > best_val_auc:
                 best_val_auc = val_metrics["auc"]
                 best_epoch   = epoch
-                torch.save(model.state_dict(), best_model_path)
 
-        summary = f"\nMeilleur epoch {best_epoch} — val AUC: {best_val_auc:.4f} — checkpoint: {best_model_path}\n"
+        summary = f"\nMeilleur epoch {best_epoch} — val AUC: {best_val_auc:.4f}\n"
         print(summary, end="")
         log.write(summary)
 
@@ -145,14 +121,14 @@ def train(cfg, model, optimizer, scheduler, train_loader, val_loader, run_label,
 # Main — sharding
 # ======================================================================
 
-all_combinations = list(product(encoder_list, mil_list, status_list))
+all_combinations = list(product(encoder_list, marker_list, mil_list, status_list))
 my_combinations  = [(idx, combo) for idx, combo in enumerate(all_combinations) if idx % NUM_SHARDS == SHARD_ID]
 
 print(f"[Shard {SHARD_ID}/{NUM_SHARDS}] {len(all_combinations)} combinaisons totales, "
       f"{len(my_combinations)} assignees a ce shard.")
 
-os.makedirs("output_calym/mil", exist_ok=True)
-accuracy_log_path = os.path.join("output_calym/mil", "accuracy_summary.txt")
+os.makedirs("output_reborn", exist_ok=True)
+accuracy_log_path = os.path.join("output_reborn", "accuracy_summary.txt")
 with open(accuracy_log_path, "w") as f:
     f.write("run_label\ttrain_acc\ttest_acc\n")
 
@@ -160,13 +136,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 if torch.cuda.is_available():
     print(f"GPU : {torch.cuda.get_device_name(0)}")
 
-for idx, (encoder, mil, status) in my_combinations:
+for idx, (encoder, marker, mil, status) in my_combinations:
     enc       = ENCODER_CFG[encoder]
-    run_dir   = os.path.join("output_calym", "mil", encoder, mil, status)
-    run_label = f"{status} | {encoder} | {mil}"
+    run_dir   = os.path.join("output_reborn", encoder, marker, mil, status)
+    run_label = f"{status} | {encoder} | {mil} | {marker}"
     os.makedirs(run_dir, exist_ok=True)
 
-    out_csv_marker, df_status = cleaning_csv(dataframe_id, encoder, status,
+    out_csv_marker, df_status = cleaning_csv(dataframe_id, marker, encoder, status,
                                             group_0=status_dict[status]["group_0"],
                                             group_1=status_dict[status]["group_1"])
     if df_status.empty:
@@ -175,7 +151,7 @@ for idx, (encoder, mil, status) in my_combinations:
     n_classes  = int(df_status["Status"].nunique())
     type_class = "binary" if n_classes == 2 else "multi_class"
 
-    tiles_dir = os.path.join("embedding", encoder,  enc["tiles_subdir"])
+    tiles_dir = os.path.join("data_224_reborn", encoder, marker, enc["tiles_subdir"])
     if not os.path.isdir(tiles_dir):
         print(f"[SKIP] tiles_dir introuvable : {tiles_dir}")
         continue
@@ -183,7 +159,7 @@ for idx, (encoder, mil, status) in my_combinations:
     slide_features_csv = None
     bag_keys           = ["X", "Y", "coords"]
     if enc["slide_csv"]:
-        candidate = os.path.join("embedding", encoder, enc["slide_subdir"], enc["slide_csv"])
+        candidate = os.path.join("data_224_reborn", encoder, marker, enc["slide_subdir"], enc["slide_csv"])
         if os.path.isfile(candidate):
             slide_features_csv = candidate
             bag_keys           = ["X", "X_slide", "Y", "coords"]
@@ -191,6 +167,8 @@ for idx, (encoder, mil, status) in my_combinations:
     if mil in ("patchgcn", "deepgraphsurv"):
         bag_keys.append("adj")
 
+
+    # Parameters of training, validation and test sets, model, optimizer, scheduler, etc.
     CFG = dict(
         slide_features_csv = slide_features_csv,
         slide_id_col       = "wsi_name",
@@ -200,8 +178,8 @@ for idx, (encoder, mil, status) in my_combinations:
         model_mil          = mil,
         in_shape           = (enc["in_shape"],),
         lr                 = 1e-4,
-        epochs             = 150,
-        batch_size         = 1024,
+        epochs             = 80,
+        batch_size         = 256,
         val_split          = 0.15,
         test_split         = 0.15,
         device             = str(device),
@@ -237,6 +215,7 @@ for idx, (encoder, mil, status) in my_combinations:
 
     plot_accuracy_curves(history, best_epoch,   os.path.join(run_dir, "accuracy_curves.png"))
     plot_confusion_matrix(final_tracker,         os.path.join(run_dir, "confusion_matrix.png"))
+    #To generate heatmaps, uncomment the following line
     #generate_heatmaps(CFG, model)
 
 

@@ -15,7 +15,7 @@ import json
 from trident.IO import create_lock, remove_lock, is_locked, update_log, collect_valid_slides
 from trident.Maintenance import deprecated
 from trident.wsi_objects.WSIFactory import OPENSLIDE_EXTENSIONS, PIL_EXTENSIONS, SDPC_EXTENSIONS
-from src.class_wsi_claude import WSI  # ← ta classe personnalisée
+from class_wsi import WSI
 import openslide
 
 import os

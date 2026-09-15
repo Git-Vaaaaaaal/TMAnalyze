@@ -14,16 +14,17 @@ Sur Jean-Zay, pointer HF_HOME vers $SCRATCH ou $STORE pour un cache persistant :
 
 import os
 from huggingface_hub import login, snapshot_download
-from env import hf_token
+from env import hf_token, HF_HOME
 
 login(hf_token)
 
-# Répertoire de cache — HF utilise automatiquement HF_HOME/hub si HF_HOME est défini.
-# Ne pas passer cache_dir explicitement pour éviter le mismatch avec hf_hub_download.
-hf_home = os.environ.get("HF_HOME", None)
-cache_dir = None  # laisse HF résoudre via HF_HOME → HF_HOME/hub
-if hf_home:
-    print(f"HF_HOME : {hf_home}  →  cache effectif : {hf_home}/hub")
+# Répertoire de cache — défini dans env.py pour rester cohérent avec run_embedding.py
+# (mode offline). Ne pas passer cache_dir explicitement pour éviter le mismatch avec
+# hf_hub_download : on laisse HF résoudre via HF_HOME → HF_HOME/hub.
+cache_dir = None
+if HF_HOME:
+    os.environ["HF_HOME"] = HF_HOME
+    print(f"HF_HOME : {HF_HOME}  →  cache effectif : {HF_HOME}/hub")
 else:
     print("Cache HuggingFace : défaut (~/.cache/huggingface/hub)")
 
@@ -36,8 +37,8 @@ PATCH_ENCODER_REPOS = {
     "musk":         "xiangjx/musk",
     "openmidnight": "kaiko-ai/midnight",
     "virchow2":     "paige-ai/Virchow2",
-    "virchow":      "paige-ai/Virchow",      # utilisé par prism
-    "conch_v15":    "MahmoodLab/conch_v1_5", # utilisé par titan / feather
+    "virchow":      "paige-ai/Virchow",
+    "conch_v15":    "MahmoodLab/conch_v1_5",
 }
 
 SLIDE_ENCODER_REPOS = {
